@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap css-->
+    <link rel="stylesheet" href="{{url_for('static', filename='bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+    <title>게시판</title>
+</head>
+
+<body>
+{% include "navbar.html" %}
+<!-- 기본 템플릿에 삽입할 내용 Start -->
+{% block content %}
+<!-- 여기 안에 HTML 컨텐츠가 들어감 -->
+{% endblock %}
+<!-- 기본 템플릿에 삽입할 내용 End -->
+<!-- jQuery JS -->
+<script src="{{ url_for('static', filename='jquery-3.5.1.min.js') }}"></script>
+<!-- Bootstrap JS-->
+<script src="{{ url_for('static', filename='bootstrap.min.js') }}"></script>
+<!-- 자바스크립트 Start -->
+{% block script %}
+{% endblock %}
+<!-- 자바스크립트 End -->
+</body>
+</html>
