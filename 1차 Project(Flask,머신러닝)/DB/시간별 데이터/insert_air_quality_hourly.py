@@ -23,7 +23,7 @@ engine = create_engine(f'oracle+oracledb://{user}:{password}@{host_port_sid}')
 def load_data():
     # 자치구 코드 매핑
     with engine.connect() as conn:
-        # 1. 알케미 2.0 방식으로 실행
+        # 알케미 2.0 방식으로 실행
         result = conn.execute(text("SELECT DIST_CODE, DIST_NAME FROM DISTRICT_CODE"))
         dist_df = pd.DataFrame(result.fetchall(), columns=result.keys())
     dist_map = dict(zip(dist_df['dist_name'], dist_df['dist_code']))
