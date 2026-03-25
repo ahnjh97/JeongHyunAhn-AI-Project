@@ -26,3 +26,6 @@ class Users(db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    birth_year = db.Column(db.Integer)
+    district = db.Column(db.String(50))
+    disease = db.Column(db.String(100))

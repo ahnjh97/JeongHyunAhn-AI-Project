@@ -1,7 +1,6 @@
 import platform
 import os
 import oracledb
-from flask_sqlalchemy import SQLAlchemy
 
 # platform을 체크해서 경로를 유연하게 설정
 if platform.system() == 'Windows':

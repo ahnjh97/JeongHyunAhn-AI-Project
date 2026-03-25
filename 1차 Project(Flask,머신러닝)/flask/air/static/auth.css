@@ -1,0 +1,417 @@
+textarea{
+    width: 100%;
+}
+
+input[type=submit], button[type=submit]{
+    margin-top:10px;
+}
+
+body {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
+.auth-header {
+    text-align: left;       /* 모든 텍스트 왼쪽 정렬 */
+    width: 100%;            /* 컨테이너 너비 확보 */
+    max-width: 400px;       /* 입력창 카드와 너비 통일 */
+    margin: 0 auto 35px auto; /* 중앙에 배치하되 아래쪽 여백 확보 */
+    padding: 0 5px;         /* 아주 미세한 좌우 여백 */
+}
+
+.auth-header h2 {
+    font-size: 26px;        /* 이미지와 비슷한 큼직한 사이즈 */
+    color: #1a1a1a;         /* 제목은 거의 검은색에 가깝게 */
+    margin-bottom: 12px;    /* 제목과 설명 사이 간격 */
+    letter-spacing: -0.8px; /* 자간을 좁혀서 더 단단한 느낌 */
+}
+
+.auth-header p {
+    font-size: 14.5px;      /* 설명글에 적합한 사이즈 */
+    font-weight: 400;       /* 가벼운 굵기 */
+    color: #555555;         /* 요청하신 #555 색상 적용 */
+    line-height: 1.5;       /* 줄 간격을 주어 가독성 향상 */
+    margin: 0;              /* 기본 마진 제거 */
+}
+
+/* 화면 전체 중앙 정렬 설정 */
+body, html {
+    height: 100%;
+    margin: 0;
+    background-color: #f8f9fa; /* 연한 회색 배경 */
+}
+
+/* 모든 항목을 감싸는 컨테이너 (유리 효과 버전) */
+.auth-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 100%;
+    max-width: 450px;
+    padding: 40px;
+
+    /* 핵심: 반투명 배경 (흰색 70~80% 투명도) */
+    background: rgba(255, 255, 255, 0.2);
+
+    /* 핵심: 뒤쪽 배경을 흐리게 (유리 질감) */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px); /* 사파리 브라우저 지원 */
+
+    /* 핵심: 미세한 빛 반사 효과 (흰색 테두리) */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+
+    border-radius: 24px; /* 좀 더 둥글게 하면 더 예뻐요 */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); /* 너무 진하지 않은 그림자 */
+
+    text-align: center;
+    z-index: 10;
+}
+
+/* 1. 입력 섹션 전체 (너비 제한) */
+.input-section {
+    text-align: left;
+    margin-top: 25px;
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 400px; /* 전체적인 너비를 400px로 제한하여 너무 커지지 않게 함 */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 2. 라벨 (요청하신 #555 색상 및 왼쪽 정렬) */
+.email-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #555 !important;   /* 정확히 요청하신 색상 */
+    margin-bottom: 12px;
+    padding-left: 5px;
+}
+
+/* 1. 입력창을 감싸는 박스 (부모) */
+.code-input-wrapper.email-box {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 54px;              /* 높이를 살짝 키워 시원하게 */
+    padding: 0 18px;           /* 좌우 여백 확보 */
+    background: rgba(255, 255, 255, 0.5); /* 좀 더 밝은 유리 효과 */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.08); /* 아주 섬세한 테두리 */
+    border-radius: 14px;       /* 2단계보다 조금 더 둥글게 */
+    transition: all 0.25s ease-in-out;
+    box-sizing: border-box;
+}
+
+/* 박스 클릭(포커스) 시 변화 */
+.code-input-wrapper.email-box:focus-within {
+    background: rgba(255, 255, 255, 0.8); /* 더 하얗게 밝아짐 */
+    border-color: #1da1f2;                /* 아까 고른 하늘색으로 강조 */
+    box-shadow: 0 0 0 4px rgba(29, 161, 242, 0.1); /* 은은한 외곽 빛 효과 */
+}
+
+/* 2. 실제 입력 필드 (자식) */
+#email {
+    flex: 1;
+    height: 100%;             /* 부모 박스 높이 꽉 채우기 */
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+
+    /* 텍스트 스타일링 */
+    font-size: 16px;          /* 모바일에서도 확대 안 되는 최적 크기 */
+    color: #333333;
+    font-weight: 500;         /* 너무 가늘지 않게 */
+    letter-spacing: -0.3px;
+
+    /* 입력 시 왼쪽 여백 */
+    padding: 0;
+    margin: 0;
+}
+
+/* 플레이스홀더를 더 고급스럽게 */
+#email::placeholder {
+    color: #bbbbbb;
+    font-weight: 400;
+}
+
+/* 1. 스텝 인디케이터 전체 컨테이너 */
+.step-indicator {
+    display: flex;
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center;
+    margin-bottom: 50px;
+    padding: 0;
+}
+
+/* 2. 개별 스텝 (동그라미) */
+.step {
+    width: 12px;
+    height: 12px;
+    background-color: #e0e0e0;
+    border-radius: 50%;
+    position: relative; /* 선 배치를 위한 기준점 */
+    z-index: 2;
+}
+
+/* 3. 스텝 사이의 간격 조절 (여기서 숫자를 바꾸면 간격이 넓어집니다) */
+.step:not(:last-child) {
+    margin-right: 80px; /* 점과 점 사이의 순수 간격 */
+}
+
+.step.active, .step.completed {
+    background-color: #007bff;
+}
+
+/* 4. 스텝 사이를 연결하는 선 */
+.step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 12px; /* 동그라미 크기만큼 오른쪽에서 시작 */
+    width: 80px; /* 위에서 설정한 margin-right 값과 똑같이 맞추세요 */
+    height: 2px;
+    background-color: #e0e0e0;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+/* 완료된 구간의 선 색상 변경 */
+.step.completed:not(:last-child)::after {
+    background-color: #007bff;
+}
+
+.code-input-wrapper.email-box {
+    flex-direction: column;    /* 가로가 아닌 세로로 배치 */
+    align-items: flex-start;   /* 왼쪽 정렬 */
+    padding: 20px 25px;        /* 상하 여백을 더 넉넉히 */
+}
+
+.email-box label {
+    margin-bottom: 15px;       /* 라벨과 인풋 사이 간격 */
+    margin-left: 0;
+}
+
+/* 2. 버튼 그룹: 양쪽 배치 및 스타일 */
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    gap: 15px;
+    width: 100%;
+}
+
+/* 두 버튼의 공통 스타일 (크기 통일의 핵심) */
+.btn-prev, .btn-submit {
+    /* 1. 내부 여백 및 폰트 통일 */
+    padding: 10px 0; /* 세로만 주고 가로는 width로 조절하거나 적당히 배분 */
+    width: 80px;    /* 버튼의 너비를 고정하면 가장 깔끔하게 대칭이 됩니다 */
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    border: none;
+
+    /* 2. 정렬 통일 (태그가 달라도 똑같이 보이게 함) */
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+}
+
+/* 이전 버튼 (왼쪽, 연한 회색) */
+.btn-prev {
+    background-color: #f1f3f5;
+    color: #495057;
+}
+
+.btn-prev:hover {
+    background-color: #e9ecef;
+}
+
+/* 다음 버튼 (오른쪽, 파란색) */
+.btn-submit {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-submit:hover,
+.btn-outline-wide:hover {
+    /* 1. 색상을 더 밝고 화사한 하늘색으로 변경 */
+    background-color: #1da1f2;
+    color: white;
+
+    /* 2. 그림자는 아주 연하게 설정 */
+    box-shadow: 0 2px 8px rgba(29, 161, 242, 0.2);
+
+    /* 3. 깔끔하게 텍스트 밑줄 방지 */
+    text-decoration: none !important;
+}
+
+/* -----회원가입 2단계----- */
+/* 이메일 표시 카드 스타일 */
+.email-display-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+
+    /* 핵심: 컨테이너보다 조금 더 투명하게 설정 (0.4 ~ 0.5) */
+    background: rgba(255, 255, 255, 0.4);
+
+    /* 뒤쪽의 블러 효과를 한 번 더 중첩 */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+
+    /* 테두리를 아주 연하게 해서 경계선만 살짝 보이게 함 */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+
+    margin-bottom: 25px;
+    text-align: left; /* 텍스트는 왼쪽 정렬 유지 */
+}
+
+/* 내부 텍스트 가독성 확보 */
+.email-info strong {
+    display: block;
+    font-size: 1rem;
+    color: #1a1a1a; /* 글래스모피즘에서는 진한 회색/검정이 가독성이 좋습니다 */
+}
+
+.email-info span {
+    font-size: 0.8rem;
+    color: #555; /* 부드러운 대비 */
+}
+
+/* 펜 아이콘 스타일 */
+.edit-icon {
+    color: #007bff;
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+
+.edit-icon:hover {
+    transform: scale(1.1); /* 살짝 커지는 효과 */
+}
+
+/* 입력 섹션 전체 컨테이너 */
+.input-section {
+    text-align: left;
+    margin-bottom: 30px;
+}
+
+.input-section label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    padding-left: 5px;
+}
+
+/* 입력창을 감싸는 유리 박스 */
+.code-input-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* 요소 사이 간격 최적화 */
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    transition: 0.3s;
+    overflow: hidden; /* 내부 요소가 삐져나오지 않게 함 */
+}
+
+/* 마우스 클릭(포커스) 시 효과 */
+.code-input-wrapper:focus-within {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: #007bff; /* 파란색 포인트 */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.1);
+}
+
+/* 실제 input 스타일 */
+#auth_code {
+    /* 핵심: 버튼 자리를 제외한 나머지 공간만 차지 */
+    flex: 1;
+    min-width: 0; /* flex 환경에서 너비가 튀는 현상 방지 */
+    background: transparent;
+    border: none;
+    font-size: 1.2rem; /* 자간이 넓으므로 폰트 크기를 살짝 조절 */
+    letter-spacing: 5px; /* 침범 방지를 위해 자간을 5~8px 사이로 조정 */
+    color: #333;
+    outline: none;
+    padding: 10px 5px;
+}
+
+#auth_code::placeholder {
+    color: rgba(0, 0, 0, 0.2);
+    letter-spacing: 4px;
+}
+
+/* 하단 도움말 텍스트 스타일링 */
+.input-help {
+    font-size: 0.85rem;
+    color: #555; /* 너무 진하지 않은 은은한 색상 */
+    margin-top: 6px;           /* 입력창과의 간격을 확실히 벌림 */
+    padding-left: 5px;          /* 왼쪽 정렬 라인 맞춤 */
+    line-height: 1.5;           /* 줄 간격 조절로 가독성 향상 */
+    letter-spacing: -0.02em;    /* 살짝 좁혀서 세련된 느낌 */
+    font-weight: 400;
+}
+
+/* 재전송 버튼 스타일 */
+.btn-resend {
+    flex-shrink: 0; /* 중요: 어떤 상황에서도 버튼 크기가 줄어들거나 밀리지 않음 */
+    background: rgba(0, 123, 255, 0.1);
+    border: none;
+    color: #007bff;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap; /* 글자가 두 줄로 변하는 것 방지 */
+    margin-left: 10px;    /* 입력창과의 최소 거리 확보 */
+    transition: 0.2s;
+}
+
+.btn-resend:hover {
+    background: rgba(0, 123, 255, 0.2);
+}
+
+/* 1단계 전용: 버튼을 가로로 길게, 중앙에 배치 */
+.button-group-center {
+    display: flex;
+    justify-content: center;
+    margin-top: 35px;
+}
+
+.btn-outline-wide {
+    /* 1. 내부 여백 및 폰트 통일 */
+    padding: 10px 0; /* 세로만 주고 가로는 width로 조절하거나 적당히 배분 */
+    width: 120px;    /* 버튼의 너비를 고정하면 가장 깔끔하게 대칭이 됩니다 */
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    border: none;
+
+    /* 2. 정렬 통일 (태그가 달라도 똑같이 보이게 함) */
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+
+    background-color: #007bff;
+    color: white;
+}

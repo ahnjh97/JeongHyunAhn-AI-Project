@@ -1,33 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container my-3">
-  <form method="post" class="post-form">
-    <!-- 명시적으로 action="{{ url_for('auth.signup')}}" 이렇게 쓰는 것과 같음 -->
-    {{ form.csrf_token }}
-    {% include "form_errors.html" %}
-    <div class="form-group"> <!-- form-group은 input,label 설명 텍스트 등을 하나의 그룹으로 묶어 적절한 여백과 정렬을 제공함-->
-      <label for="username">사용자 이름</label>
-      <input type="text" class="form-control" name="username" id="username"
-             value="{{ form.username.data or '' }}">
-      <!-- name은 서버로 전송되는 폼 데이터의 이름, id는 HTML요소를 고유하게 식별 <label>태그와 연결하여 접근성 높임 -->
-      <!-- class="form=control"은 input 요소를 스타일링하여 깔끔하고 일관된 UI를 제공함 -->
+<div class="main-visual-section">
+  <div class="auth-container">
+    <div class="step-indicator">
+      <span class="step active"></span>
+      <span class="step"></span>
+      <span class="step"></span>
     </div>
-    <div class="form-group">
-      <label for="password1">비밀번호</label>
-      <input type="password" class="form-control" name="password1" id="password1"
-             value="{{ form.password1.data or '' }}">
+
+    <div class="auth-header">
+      <h2><strong>회원 가입</strong></h2>
+      <p>이메일 인증을 진행해 주세요</p>
     </div>
-    <div class="form-group">
-      <label for="password2">비밀번호 확인</label>
-      <input type="password" class="form-control" name="password2" id="password2"
-             value="{{ form.password2.data or '' }}">
-    </div>
-    <div class="form-group">
-      <label for="email">이메일</label>
-      <input type="text" class="form-control" name="email" id="email"
-             value="{{ form.email.data or '' }}">
-    </div>
-    <button type="submit" class="btn btn-primary">생성하기</button>
-  </form>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert-custom">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="post" class="auth-form">
+      <div class="input-section">
+        <label for="email" class="email-label">이메일을 입력해 주세요</label>
+        <div class="code-input-wrapper email-box">
+          <input type="email" name="email" id="email"
+                 style="letter-spacing: normal; font-size: 1rem;" required>
+        </div>
+      </div>
+
+      <div class="button-group-center">
+        <button type="submit" class="btn-outline-wide">인증 코드 전송</button>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}

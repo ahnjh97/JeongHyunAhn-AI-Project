@@ -5,3 +5,123 @@ textarea{
 input[type=submit], button[type=submit]{
     margin-top:10px;
 }
+
+/* 1. 기본 텍스트 폰트 설정 (아이콘 폰트와 충돌 방지) */
+body, html {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+}
+
+/* 2. 폼 요소(인풋, 버튼 등)는 부모(body)의 폰트를 강제로 상속받게 함 */
+input, button, select, textarea, optgroup {
+    font-family: inherit; /* 이게 핵심입니다! */
+    font-size: inherit;
+    line-height: inherit;
+}
+
+/* 3. (중요) 아이콘 클래스들은 폰트 상속에서 제외 */
+/* 만약 Font Awesome을 쓰신다면 아래 클래스들이 폰트를 유지하게 합니다 */
+.fa, .fas, .far, .fab, .material-icons {
+    font-family: inherit; /* 기본적으로는 상속받되 */
+    font-family: "Font Awesome 5 Free", "Material Icons" !important; /* 아이콘 폰트를 우선시 */
+}
+
+.nav-item .btn-primary:hover {
+    /* 1. 사용자가 선택한 차분하고 화사한 하늘색 */
+    background-color: #1da1f2;
+    color: white !important; /* 부트스트랩 기본색 덮어쓰기 */
+
+    /* 2. 그림자 효과 */
+    box-shadow: 0 4px 12px rgba(29, 161, 242, 0.3);
+
+    /* 4. 밑줄 제거 */
+    text-decoration: none !important;
+}
+
+/* 부드러운 전환을 위해 기본 상태에도 transition 추가 */
+.nav-item .btn-primary {
+    transition: all 0.3s ease;
+    border: none; /* 테두리 제거로 더 깔끔하게 */
+}
+
+/* 1. 배경 그라데이션 (바디 전체가 아닌 메인 컨테이너에 적용) */
+.main-visual-section {
+    font-family: "Pretendard Variable", Pretendard, sans-serif;
+    background:
+        radial-gradient(circle at 15% 125%, rgba(14, 165, 233, 1) 0%, rgba(255, 255, 255, 0) 55%),
+        radial-gradient(circle at 85% 125%, rgba(126, 34, 206, 1) 0%, rgba(255, 255, 255, 0) 55%),
+        #ffffff;
+
+    background-attachment: fixed;
+    min-height: calc(100vh - 70px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+/* 2. 상단 그라데이션 텍스트 */
+.gradient-text-sub {
+    background: linear-gradient(90deg, #38bdf8 0%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* 3. 중앙 메인 타이틀 (검은색 큰 글씨) */
+.main-title {
+    font-weight: 800;
+    font-size: clamp(2rem, 6vw, 3.5rem); /* 반응형 글자 크기 */
+    line-height: 1.2;
+    color: #111827;
+    letter-spacing: -0px;
+    margin-bottom: 3rem;
+}
+
+/* 4. 시작하기 버튼 (그라데이션) */
+.btn-air-start {
+    background: linear-gradient(90deg, #38bdf8 0%, #a855f7 100%);
+    border: none;
+    color: white !important;
+    font-weight: 600;
+    padding: 12px 35px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.2);
+    text-decoration: none;
+}
+
+.btn-air-start:hover {
+    transform: translateY(-3px); /* 위로 살짝 이동 */
+    box-shadow: 0 8px 25px rgba(168, 85, 247, 0.5); /* 그림자 강화 */
+    filter: brightness(1.15); /* 아까보다 조금 더 밝게 (1.1 -> 1.15) */
+    color: white !important;
+}
+
+/* Active (클릭하는 순간): 확실히 눌리는 피드백 제공 */
+.btn-air-start:active {
+    transform: translateY(1px) scale(0.96);
+    box-shadow: 0 2px 8px rgba(168, 85, 247, 0.2);
+    filter: brightness(0.95); /* 클릭 시엔 살짝 어둡게 하여 눌림 표현 */
+    transition: all 0.1s; /* 클릭 반응은 아주 빠르게 */
+}
+
+/* 5. 최하단 설명 문구 (회색/흰색 톤) */
+.main-footer-text {
+    color: #ffffff; /* 또는 rgba(255, 255, 255, 0.9) */
+    font-size: 0.95rem;
+    font-weight: 300; /* 글자를 약간 가늘게 하면 더 세련되어 보입니다 */
+    margin-top: auto;
+    padding-bottom: 3rem;
+    letter-spacing: -0.5px;
+}
+
+/* 에러 메시지 (alert-danger 대신 가벼운 디자인) */
+.alert-custom {
+    color: #e03131;
+    font-size: 13px;
+    margin-bottom: 15px;
+    text-align: center;
+}

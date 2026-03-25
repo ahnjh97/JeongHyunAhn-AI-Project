@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="main-visual-section">
+  <div class="auth-container">
+    <div class="step-indicator">
+      <span class="step completed"></span>
+      <span class="step active"></span>
+      <span class="step"></span>
+    </div>
+
+    <div class="auth-header">
+      <h2><strong>이메일 인증</strong></h2>
+      <p>이메일 인증을 완료해 주세요</p>
+    </div>
+
+    <div class="email-display-card">
+      <div class="email-info">
+        <strong>{{ session['signup_temp']['email'] }}</strong>
+        <span>이메일 아직 인증되지 않음</span>
+      </div>
+      <a href="{{ url_for('auth.signup') }}" class="edit-icon">
+          <i class="fas fa-pen"></i> </a>
+    </div>
+
+    <form method="post" class="auth-form">
+      <div class="input-section">
+        <label for="auth_code">인증 코드</label>
+        <div class="code-input-wrapper">
+          <input type="text" name="auth_code" id="auth_code"
+                 placeholder="_ _ _ _ _ _" maxlength="6"
+                 pattern="\[0-9]{6}" required>
+          <button type="button" class="btn-resend" onclick="location.reload();">
+            <i class="fas fa-sync-alt"></i> 재전송
+          </button>
+        </div>
+        <p class="input-help">이메일로 전송된 인증 코드를 입력해 주세요</p>
+      </div>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <p class="error-msg">{{ messages[0] }}</p>
+        {% endif %}
+      {% endwith %}
+
+      <div class="button-group">
+          <a href="{{ url_for('auth.signup') }}" class="btn-prev">이전</a>
+          <button type="submit" class="btn-submit">다음</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
