@@ -25,12 +25,16 @@
     </div>
 
     <form method="post" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
       <div class="input-section">
         <label for="auth_code">인증 코드</label>
-        <div class="code-input-wrapper">
-          <input type="text" name="auth_code" id="auth_code"
-                 placeholder="_ _ _ _ _ _" maxlength="6"
-                 pattern="\[0-9]{6}" required>
+        <div class="input-row">
+          <div class="code-input-wrapper flex-grow">
+            <input type="text" name="auth_code" id="auth_code"
+                   placeholder="_ _ _ _ _ _" maxlength="6"
+                   pattern="\[0-9]{6}" required>
+          </div>
           <button type="submit" name="action" value="resend" class="btn-resend" formnovalidate>
             <i class="fas fa-sync-alt"></i> 재전송
           </button>

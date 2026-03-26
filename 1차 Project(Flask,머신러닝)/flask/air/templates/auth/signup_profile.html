@@ -16,20 +16,20 @@
 
     <form method="post" class="auth-form">
       {{ form.csrf_token }}
-      <div class="info-group-card">
+      <div class="input-section">
         <div class="input-row-split">
           <div class="input-item flex-half">
-            <label class="small-label">출생 연도</label>
+            <label>출생 연도</label>
             {{ form.birth_year(class="form-select-custom full-width") }}
           </div>
           <div class="input-item flex-half">
-            <label class="small-label">관심 자치구</label>
+            <label>관심 자치구</label>
             {{ form.district(class="form-select-custom full-width") }}
           </div>
         </div>
 
         <div class="input-item">
-          <label class="small-label">기저 질환</label>
+          <label>기저 질환</label>
           {{ form.disease(class="form-select-custom") }}
         </div>
       </div>

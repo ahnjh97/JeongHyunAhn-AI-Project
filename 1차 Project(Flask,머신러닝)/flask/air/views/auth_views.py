@@ -1,4 +1,4 @@
-from flask import Blueprint, url_for, render_template, request, flash, session, g
+from flask import Blueprint, url_for, render_template, request, flash, session, g, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 from air import db
@@ -47,7 +47,6 @@ def signup():
 
     return render_template('auth/signup.html', email=existing_email)
 
-
 # [STEP 2] 인증코드 6자리 입력
 @bp.route('/signup-email', methods=['GET', 'POST'])
 def signup_email():
@@ -86,7 +85,6 @@ def signup_email():
 
     return render_template('auth/signup_email.html')
 
-
 # [STEP 3] 계정 설정 (ID, PW)
 @bp.route('/signup-account', methods=['GET', 'POST'])
 def signup_account():
@@ -115,7 +113,6 @@ def signup_account():
         return redirect(url_for('auth.signup_profile'))
 
     return render_template('auth/signup_account.html', form=form)
-
 
 # [STEP 4] 상세 정보 입력 (출생연도, 지역구, 기저질환) 및 최종 저장
 @bp.route('/signup-profile', methods=['GET', 'POST'])
@@ -161,7 +158,6 @@ def signup_profile():
 
     return render_template('auth/signup_profile.html', form=form)
 
-
 @bp.route('/login/', methods=['GET', 'POST'])
 def login():
     form = UserLoginForm()
@@ -193,3 +189,28 @@ def logout():
 
 def send_email(email, auth_code):
     pass
+
+@bp.route('/check-username', methods=['POST'])
+def check_username():
+    # 1. JSON 데이터 받기
+    data = request.get_json()
+    username = data.get('username')
+
+    if not username:
+        return jsonify({'is_available': False, 'message': '아이디를 입력해주세요.'}), 400
+
+    # 2. SQLAlchemy 2.0 방식으로 중복 조회
+    stmt = select(Users).where(Users.username == username)
+    existing_user = db.session.execute(stmt).scalar_one_or_none()
+
+    # 3. 결과 반환
+    if existing_user:
+        return jsonify({
+            'is_available': False,
+            'message': '이미 사용 중인 아이디입니다.'
+        })
+    else:
+        return jsonify({
+            'is_available': True,
+            'message': '사용 가능한 아이디입니다.'
+        })

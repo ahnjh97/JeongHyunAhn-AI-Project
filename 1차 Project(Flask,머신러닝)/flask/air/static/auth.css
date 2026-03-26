@@ -94,13 +94,18 @@ body {
     flex-direction: column;
 }
 
-/* 2. 라벨 (요청하신 #555 색상 및 왼쪽 정렬) */
-.email-label {
-    display: block;
-    font-size: 0.9rem;
-    color: #555 !important;   /* 정확히 요청하신 색상 */
-    margin-bottom: 12px;
-    padding-left: 5px;
+/* 모든 회원가입 단계 라벨 스타일 (사용자 지정 스타일) */
+label {
+    display: block !important;
+    font-size: 0.9rem !important;
+    color: #555 !important;      /* 요청하신 정확한 색상 유지 */
+    margin-bottom: 4px !important;
+    padding-left: 5px !important;
+    text-align: left !important;
+
+    /* 1단계와 느낌을 맞추기 위한 최소한의 설정 */
+    font-weight: 600 !important;  /* 너무 얇아서 연해 보이지 않도록 굵기만 살짝 추가 */
+    margin-top: 0px;             /* 요소 간 간격 */
 }
 
 /* 1. 입력창을 감싸는 박스 (부모) */
@@ -108,8 +113,8 @@ body {
     display: flex;
     align-items: center;
     width: 100%;
-    height: 54px;              /* 높이를 살짝 키워 시원하게 */
-    padding: 0 18px;           /* 좌우 여백 확보 */
+    height: 40px;              /* 높이를 살짝 키워 시원하게 */
+    padding: 0 15px;           /* 좌우 여백 확보 */
     background: rgba(255, 255, 255, 0.5); /* 좀 더 밝은 유리 효과 */
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -381,20 +386,24 @@ body {
     font-weight: 400;
 }
 
-/* 재전송 버튼 스타일 */
+/* 재전송/중복확인 버튼 높이 고정 */
 .btn-resend {
-    flex-shrink: 0; /* 중요: 어떤 상황에서도 버튼 크기가 줄어들거나 밀리지 않음 */
+    height: 40px !important;       /* 입력창(.code-input-wrapper)과 동일하게 설정 */
+    min-height: 40px !important;
+    padding: 0 15px !important;    /* 좌우 여백 */
+    line-height: 40px !important;  /* 텍스트 수직 중앙 정렬 */
+    margin-top: 0 !important;      /* 불필요한 마진 제거 */
+    margin-left: 0 !important;     /* gap이 간격을 조절하므로 제거 */
+
+    /* 디자인 스타일 (통일감) */
     background: rgba(0, 123, 255, 0.1);
-    border: none;
+    border: 1px solid rgba(0, 123, 255, 0.2);
+    border-radius: 12px;           /* 입력창과 곡률 통일 */
     color: #007bff;
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
-    white-space: nowrap; /* 글자가 두 줄로 변하는 것 방지 */
-    margin-left: 10px;    /* 입력창과의 최소 거리 확보 */
-    transition: 0.2s;
 }
 
 .btn-resend:hover {
@@ -460,30 +469,6 @@ input:-webkit-autofill:active {
     background-clip: content-box !important;
 }
 
-/* 3단계 전용 카드 스타일 (2단계 email-display-card 기반) */
-.info-group-card {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    padding: 10px;
-    margin-bottom: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px; /* 드롭다운 사이의 세로 간격 */
-    text-align: left;
-}
-
-.info-group-card.no-gap {
-    gap: 1px; /* ID/PW 박스 사이의 간격을 더 좁게 */
-}
-
-/* 인풋 박스 자체에 마진이 있다면 제거 */
-.info-group-card.compact .input-section {
-    margin: 0;
-    padding: 0;
-}
-
 /* 드롭다운 스타일 (길이 조절) */
 .form-select-custom {
     width: 100%;
@@ -498,22 +483,23 @@ input:-webkit-autofill:active {
     cursor: pointer;
 }
 
-/* 라벨 스타일 */
-.small-label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #666;
-    margin-bottom: 0px;
-    padding-left: 2px;
-}
-
 /* 가로 배치용 로우 */
 .input-row {
     display: flex;
+    align-items: center;  /* 입력창과 버튼의 중심선을 맞춤 */
+    gap: 8px;             /* 사이 간격 */
+    margin-bottom: 5px;
+}
+
+/* 2단계 입력창 감싸는 박스 */
+.input-row .code-input-wrapper {
+    height: 40px !important;
+    min-height: 40px !important;
+    display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .flex-grow {
@@ -527,11 +513,15 @@ input:-webkit-autofill:active {
     margin-bottom: 0;
 }
 
-/* 미니 에러 컨테이너 (간격 좁게) */
+/* 에러 메시지 컨테이너: 항상 같은 높이를 유지하여 레이아웃 흔들림 방지 */
 .error-msg-container.mini {
-    min-height: 15px;
-    margin-top: 2px;
-    margin-bottom: 5px;
+    height: 20px;          /* 고정 높이 설정 */
+    min-height: 20px;
+    margin-top: 0px;       /* 위쪽 입력창과의 간격 */
+    margin-bottom: 10px;    /* 아래쪽 라벨과의 간격 (필요에 따라 조절) */
+    display: flex;
+    align-items: center;   /* 텍스트 수직 중앙 정렬 */
+    overflow: hidden;      /* 텍스트가 넘쳐도 레이아웃 파괴 방지 */
 }
 
 .error-msg-container.mini .error-msg {
@@ -551,6 +541,7 @@ input:-webkit-autofill:active {
     align-items: flex-start;
     gap: 15px; /* 두 드롭다운 사이의 가로 간격 */
     width: 100%;
+    margin-bottom: 15px !important;
 }
 
 /* 개별 항목 (반 너비 차지) */
@@ -580,4 +571,51 @@ input:-webkit-autofill:active {
 /* 기저 질환 전용 (따로 배치되므로 너비 제한 유지) */
 .disease-select {
     max-width: 180px;
+}
+
+/* 3단계 입력 필드 배경 투명화 및 테두리 제거 */
+#username, #password1, #password2 {
+    width: 100%;
+    background: transparent !important; /* 배경을 투명하게 */
+    border: none !important;           /* 기본 테두리 제거 */
+    outline: none !important;          /* 포커스 시 외곽선 제거 */
+    padding: 10px 5px !important;      /* 내부 여백 */
+    font-size: 0.95rem;
+    color: #333;
+    letter-spacing: normal !important; /* 비밀번호/아이디는 자간 정상화 */
+    box-sizing: border-box;
+}
+
+/* 2. 입력창 박스 높이 고정 */
+.code-input-wrapper {
+    height: 40px !important;      /* 40px로 통일 */
+    min-height: 40px !important;
+    padding-top: 0 !important;    /* 상하 패딩 제거 (높이 왜곡 방지) */
+    padding-bottom: 0 !important;
+    display: flex;
+    align-items: center;
+}
+
+/* --- 1단계와 동일한 입력 필드 폰트 스타일 통합 적용 --- */
+#email, #username, #password1, #password2 {
+    flex: 1;
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+
+    /* [1단계 스타일 이식] */
+    font-size: 1rem !important;      /* 16px (1단계 inline 스타일과 동일) */
+    font-weight: 500 !important;     /* Pretendard의 중간 굵기 (선명함 유지) */
+    color: #333 !important;
+    letter-spacing: normal !important; /* 2단계 인증번호 자간 간섭 방지 */
+
+    /* 정렬 및 여백 */
+    line-height: normal !important;
+    padding: 0 5px !important;
+    margin: 0 !important;
+    vertical-align: middle;
 }

@@ -16,8 +16,8 @@
 
     <form method="post" class="auth-form">
       {{ form.csrf_token }}
-      <div class="info-group-card no-gap">
-        <label class="small-label">아이디를 입력해 주세요</label>
+      <div class="input-section">
+        <label>아이디를 입력해 주세요</label>
         <div class="input-row">
           <div class="code-input-wrapper flex-grow">
             {{ form.username(id="username") }}
@@ -28,7 +28,7 @@
           <p class="error-msg" id="id-error"></p>
         </div>
 
-        <label class="small-label">비밀번호를 설정해 주세요</label>
+        <label>비밀번호를 설정해 주세요</label>
         <div class="input-column">
           <div class="code-input-wrapper">
             {{ form.password1(id="password1") }}
@@ -38,7 +38,7 @@
           </div>
         </div>
 
-        <label class="small-label">비밀번호를 한 번 더 입력해 주세요</label>
+        <label>비밀번호를 한 번 더 입력해 주세요</label>
         <div class="input-column">
           <div class="code-input-wrapper">
             {{ form.password2(id="password2") }}
@@ -55,4 +55,44 @@
     </form>
   </div>
 </div>
+
+<script>
+  function checkDuplicate() {
+    const usernameInput = document.getElementById('username');
+    const errorMsg = document.getElementById('id-error');
+    const username = usernameInput.value.trim();
+
+    if (!username) {
+        errorMsg.innerText = "아이디를 입력해 주세요.";
+        errorMsg.style.color = "#e03131";
+        return;
+    }
+
+    fetch("{{ url_for('auth.check_username') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token() }}" // Flask-WTF 사용 시 필수
+        },
+        body: JSON.stringify({ username: username })
+    })
+    .then(response => response.json())
+    .then(data => {
+        errorMsg.innerText = data.message;
+
+        if (data.is_available) {
+            errorMsg.style.color = "#1da1f2"; // 성공 시 하늘색 (#555와 잘 어울림)
+            usernameInput.dataset.checked = "true"; // 중복 확인 완료 마킹
+        } else {
+            errorMsg.style.color = "#e03131"; // 에러 시 빨간색
+            usernameInput.dataset.checked = "false";
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        errorMsg.innerText = "서버 통신 오류가 발생했습니다.";
+    });
+}
+</script>
+
 {% endblock %}

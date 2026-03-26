@@ -14,11 +14,11 @@
       <p>이메일 인증을 진행해 주세요</p>
     </div>
 
-
-
     <form method="post" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
       <div class="input-section">
-        <label for="email" class="email-label">이메일을 입력해 주세요</label>
+        <label for="email">이메일을 입력해 주세요</label>
         <div class="code-input-wrapper email-box">
           <input type="email" name="email" id="email"
                  value="{{ email if email else '' }}"
