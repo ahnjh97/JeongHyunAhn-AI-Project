@@ -6,6 +6,7 @@
       <span class="step completed"></span>
       <span class="step active"></span>
       <span class="step"></span>
+      <span class="step"></span>
     </div>
 
     <div class="auth-header">
@@ -18,8 +19,9 @@
         <strong>{{ session['signup_temp']['email'] }}</strong>
         <span>이메일 아직 인증되지 않음</span>
       </div>
-      <a href="{{ url_for('auth.signup') }}" class="edit-icon">
-          <i class="fas fa-pen"></i> </a>
+      <a href="{{ url_for('auth.signup', mode='edit') }}" class="edit-icon">
+          <i class="fas fa-pen"></i>
+      </a>
     </div>
 
     <form method="post" class="auth-form">
@@ -29,22 +31,27 @@
           <input type="text" name="auth_code" id="auth_code"
                  placeholder="_ _ _ _ _ _" maxlength="6"
                  pattern="\[0-9]{6}" required>
-          <button type="button" class="btn-resend" onclick="location.reload();">
+          <button type="submit" name="action" value="resend" class="btn-resend" formnovalidate>
             <i class="fas fa-sync-alt"></i> 재전송
           </button>
         </div>
         <p class="input-help">이메일로 전송된 인증 코드를 입력해 주세요</p>
+
+        <div class="error-msg-container">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <p class="error-msg {{ 'info-msg' if category == 'info' else '' }}">
+                  {{ message }}
+                </p>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </div>
       </div>
 
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          <p class="error-msg">{{ messages[0] }}</p>
-        {% endif %}
-      {% endwith %}
-
       <div class="button-group">
-          <a href="{{ url_for('auth.signup') }}" class="btn-prev">이전</a>
-          <button type="submit" class="btn-submit">다음</button>
+          <button type="submit" class="btn-submit">확인</button>
       </div>
     </form>
   </div>

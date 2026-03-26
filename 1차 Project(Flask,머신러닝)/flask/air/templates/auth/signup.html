@@ -6,6 +6,7 @@
       <span class="step active"></span>
       <span class="step"></span>
       <span class="step"></span>
+      <span class="step"></span>
     </div>
 
     <div class="auth-header">
@@ -13,22 +14,31 @@
       <p>이메일 인증을 진행해 주세요</p>
     </div>
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="alert-custom">{{ messages[0] }}</div>
-      {% endif %}
-    {% endwith %}
+
 
     <form method="post" class="auth-form">
       <div class="input-section">
         <label for="email" class="email-label">이메일을 입력해 주세요</label>
         <div class="code-input-wrapper email-box">
           <input type="email" name="email" id="email"
+                 value="{{ email if email else '' }}"
                  style="letter-spacing: normal; font-size: 1rem;" required>
+        </div>
+
+        <div class="error-msg-container">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <p class="error-msg {{ 'info-msg' if category == 'info' else '' }}">
+                  {{ message }}
+                </p>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
         </div>
       </div>
 
-      <div class="button-group-center">
+      <div class="button-group">
         <button type="submit" class="btn-outline-wide">인증 코드 전송</button>
       </div>
     </form>

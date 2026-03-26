@@ -5,35 +5,17 @@
     <div class="step-indicator">
       <span class="step completed"></span>
       <span class="step completed"></span>
-      <span class="step completed"></span>
       <span class="step active"></span>
+      <span class="step"></span>
     </div>
 
     <div class="auth-header">
-      <h2><strong>회원 정보</strong></h2>
-      <p>맞춤형 건강 예보를 위한 정보를 입력해 주세요</p>
+      <h2><strong>계정 설정</strong></h2>
+      <p>아이디와 비밀번호를 설정해 주세요</p>
     </div>
 
     <form method="post" class="auth-form">
       {{ form.csrf_token }}
-      <div class="info-group-card">
-        <div class="input-row-split">
-          <div class="input-item flex-half">
-            <label class="small-label">출생 연도</label>
-            {{ form.birth_year(class="form-select-custom full-width") }}
-          </div>
-          <div class="input-item flex-half">
-            <label class="small-label">관심 자치구</label>
-            {{ form.district(class="form-select-custom full-width") }}
-          </div>
-        </div>
-
-        <div class="input-item">
-          <label class="small-label">기저 질환</label>
-          {{ form.disease(class="form-select-custom") }}
-        </div>
-      </div>
-
       <div class="info-group-card no-gap">
         <label class="small-label">아이디를 입력해 주세요</label>
         <div class="input-row">
@@ -68,7 +50,7 @@
       </div>
 
       <div class="button-group">
-        <button type="submit" class="btn-outline-wide">회원 가입하기</button>
+        <button type="submit" class="btn-submit">확인</button>
       </div>
     </form>
   </div>

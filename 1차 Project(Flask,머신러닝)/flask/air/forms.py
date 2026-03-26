@@ -9,8 +9,7 @@ class QuestionForm(FlaskForm):
 class AnswerForm(FlaskForm):
     content = TextAreaField('내용', validators=[DataRequired('내용은 필수 입력 항목입니다.')])
 
-class UserCreateForm(FlaskForm):
-    email = StringField('이메일', validators=[DataRequired(), Email()])
+class ProfileForm(FlaskForm):
     birth_year = SelectField('출생연도', coerce=int, validators=[DataRequired()],
                              choices=[(year, f"{year}년") for year in range(2026, 1949, -1)])
     district = SelectField('관심 지역구', validators=[DataRequired()],
@@ -32,10 +31,12 @@ class UserCreateForm(FlaskForm):
                               ('copd', '만성폐쇄성폐질환(COPD)'),
                               ('etc', '기타 호흡기 질환')
                           ])
+
+class AccountForm(FlaskForm):
     username = StringField('아이디', validators=[DataRequired(), Length(min=3, max=25)])
     password1 = PasswordField('비밀번호', validators=[
         DataRequired(), EqualTo('password2', '비밀번호가 일치하지 않습니다.')])
-    password2 = PasswordField('비밀번호확인', validators=[DataRequired()])
+    password2 = PasswordField('비밀번호 확인', validators=[DataRequired()])
 
 class UserLoginForm(FlaskForm):
     username = StringField('아이디', validators=[DataRequired(), Length(min=3, max=25)])

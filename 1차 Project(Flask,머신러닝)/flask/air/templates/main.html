@@ -2,27 +2,27 @@
 {% block content %}
 
 <div class="main-visual-section px-3">
+    <div class="main-content-wrapper">
+        <div class="mb-3">
+            <p class="gradient-text-sub">데이터 기반 호흡기 위험도 분석</p>
+        </div>
 
-    <div class="mt-auto mb-3">
-        <p class="gradient-text-sub">데이터 기반 호흡기 위험도 분석</p>
+        <h1 class="main-title mb-4">
+            AI 기반<br>
+            서울시 미세먼지 대응<br>
+            호흡기 건강 예보 서비스
+        </h1>
+
+        <div class="mb-5">
+            <a href="{{ url_for('service.service') }}" class="btn-air-start shadow-sm">
+                시작하기
+            </a>
+        </div>
+
+        <p class="main-footer-text">
+            머신러닝 기반의 정교한 시계열 분석으로 <strong>호흡기 질환 발생 추이</strong>를 미리 확인하세요.
+        </p>
     </div>
-
-    <h1 class="main-title mb-4">
-        AI 기반<br>
-        서울시 미세먼지 대응<br>
-        호흡기 건강 예보 서비스
-    </h1>
-
-    <div class="mb-5 mt-4">
-        <a href="{{ url_for('service.service') }}" class="btn-air-start shadow-sm">
-            시작하기
-        </a>
-    </div>
-
-    <p class="main-footer-text mb-5">
-        머신러닝 기반의 정교한 시계열 분석으로 <strong>호흡기 질환 발생 추이</strong>를 미리 확인하세요.
-    </p>
-
 </div>
 
 {% endblock %}

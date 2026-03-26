@@ -34,39 +34,6 @@
         </div>
       </div>
 
-      <div class="info-group-card no-gap">
-        <label class="small-label">아이디를 입력해 주세요</label>
-        <div class="input-row">
-          <div class="code-input-wrapper flex-grow">
-            {{ form.username(id="username") }}
-          </div>
-          <button type="button" class="btn-resend" onclick="checkDuplicate()">중복 확인</button>
-        </div>
-        <div class="error-msg-container mini">
-          <p class="error-msg" id="id-error"></p>
-        </div>
-
-        <label class="small-label">비밀번호를 설정해 주세요</label>
-        <div class="input-column">
-          <div class="code-input-wrapper">
-            {{ form.password1(id="password1") }}
-          </div>
-          <div class="error-msg-container mini">
-            <p class="error-msg" id="pw-error"></p>
-          </div>
-        </div>
-
-        <label class="small-label">비밀번호를 한 번 더 입력해 주세요</label>
-        <div class="input-column">
-          <div class="code-input-wrapper">
-            {{ form.password2(id="password2") }}
-          </div>
-          <div class="error-msg-container mini">
-            <p class="error-msg" id="pw2-error"></p>
-          </div>
-        </div>
-      </div>
-
       <div class="button-group">
         <button type="submit" class="btn-outline-wide">회원 가입하기</button>
       </div>

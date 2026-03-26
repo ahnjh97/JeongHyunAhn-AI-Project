@@ -2,7 +2,7 @@ from flask import Blueprint, url_for, render_template, request, flash, session, 
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 from air import db
-from air.forms import UserCreateForm, UserLoginForm
+from air.forms import AccountForm, ProfileForm, UserLoginForm
 from air.models import Users
 import random
 from sqlalchemy import select
@@ -37,7 +37,16 @@ def signup():
         session['signup_temp'] = {'email': email, 'code': auth_code}
         return redirect(url_for('auth.signup_email'))
 
-    return render_template('auth/signup.html')
+    # POST가 아닌 모든 경우(GET 등)는 여기서 처리
+    mode = request.args.get('mode')
+
+    existing_email = None
+    # 오직 '수정 모드'로 들어왔을 때만 세션 값을 꺼냅니다.
+    if mode == 'edit' and 'signup_temp' in session:
+        existing_email = session['signup_temp'].get('email')
+
+    return render_template('auth/signup.html', email=existing_email)
+
 
 # [STEP 2] 인증코드 6자리 입력
 @bp.route('/signup-email', methods=['GET', 'POST'])
@@ -46,46 +55,85 @@ def signup_email():
         return redirect(url_for('auth.signup'))
 
     if request.method == 'POST':
+        # 어떤 동작인지 확인 (버튼의 name 값 가져오기)
+        action = request.form.get('action')
+
+        # [케이스 A] 재전송 버튼을 눌렀을 때
+        if action == 'resend':
+            email = session['signup_temp'].get('email')
+            new_code = str(random.randint(100000, 999999))
+
+            # 세션의 코드 업데이트
+            session['signup_temp']['code'] = new_code
+            session.modified = True  # 세션 내부 딕셔너리 변경 시 명시적 저장
+
+            # 여기에 메일 발송 코드 추가
+            # send_email(email, new_code)
+
+            flash("인증 코드가 재전송되었습니다.", "info")
+            return render_template('auth/signup_email.html')
+
+        # [케이스 B] 인증 확인 버튼을 눌렀을 때
         user_code = request.form.get('auth_code')
         correct_code = session['signup_temp'].get('code')
 
-        if user_code == correct_code:
-            session['auth_verified'] = True  # 인증 성공 표시
-            return redirect(url_for('auth.signup_info'))
-        else:
-            flash("인증번호가 일치하지 않습니다.")
+        # if user_code == correct_code:
+        #     session['auth_verified'] = True # 인증 성공 표시
+        #     return redirect(url_for('auth.signup_account'))
+        # else:
+        #     flash("인증 코드가 일치하지 않습니다.")
+        return redirect(url_for('auth.signup_account'))
 
     return render_template('auth/signup_email.html')
 
-# [STEP 3] 상세 정보 입력 (ID, PW, 출생연도, 지역구, 기저질환)
-@bp.route('/signup-info', methods=['GET', 'POST'])
-def signup_info():
-    form = UserCreateForm()  # 폼 객체 생성
+
+# [STEP 3] 계정 설정 (ID, PW)
+@bp.route('/signup-account', methods=['GET', 'POST'])
+def signup_account():
+    form = AccountForm()
 
     # [보안] 2단계 인증 여부 확인
-    if not session.get('auth_verified'):
-        flash("이메일 인증이 필요합니다.")
-        return redirect(url_for('auth.signup'))
+    # if not session.get('auth_verified'):
+    #     return redirect(url_for('auth.signup'))
 
     if request.method == 'POST' and form.validate_on_submit():
-        # 1. 폼 데이터 가져오기
         user_id = form.username.data
-        password = form.password1.data  # UserCreateForm 정의에 맞게 수정 (password1 등)
-        birth_year = form.birth_year.data
-        district = form.district.data
-        disease = form.disease.data
+        password = form.password1.data
 
-        # 3. 아이디 중복 확인 (SQLAlchemy 2.0 방식)
         stmt = select(Users).where(Users.username == user_id)
         existing_user = db.session.execute(stmt).scalar_one_or_none()
 
         if existing_user:
             flash("이미 존재하는 아이디입니다.")
-            return render_template('auth/signup_info.html', form=form)
+            return render_template('auth/signup_account.html', form=form)
 
-        # 4. 최종 DB 저장 로직 (1단계 세션 이메일 + 3단계 입력 정보)
+            # 세션에 3단계 정보 누적 저장
+        session['signup_temp']['username'] = user_id
+        session['signup_temp']['password'] = generate_password_hash(password)
+        session.modified = True
+
+        return redirect(url_for('auth.signup_profile'))
+
+    return render_template('auth/signup_account.html', form=form)
+
+
+# [STEP 4] 상세 정보 입력 (출생연도, 지역구, 기저질환) 및 최종 저장
+@bp.route('/signup-profile', methods=['GET', 'POST'])
+def signup_profile():
+    form = ProfileForm()
+
+    if request.method == 'POST' and form.validate_on_submit():
+        birth_year = form.birth_year.data
+        district = form.district.data
+        disease = form.disease.data
+
+        # 최종 DB 저장 로직
         try:
-            email = session['signup_temp']['email']  # 1단계에서 저장한 이메일
+            # 세션에 누적된 1단계(이메일) 및 3단계(계정) 데이터 취합
+            temp = session['signup_temp']
+            email = temp['email']
+            user_id = temp['username']
+            password_hash = temp['password']
 
             new_user = Users(
                 birth_year=birth_year,
@@ -93,26 +141,26 @@ def signup_info():
                 disease=disease,
                 email=email,
                 username=user_id,
-                password=generate_password_hash(password) # 해싱하여 저장
+                password=password_hash
             )
 
             db.session.add(new_user)
             db.session.commit()
 
-            # 5. 가입 성공 후 세션 데이터 삭제 (청소)
+            # 가입 성공 후 세션 데이터 삭제
             session.pop('signup_temp', None)
             session.pop('auth_verified', None)
 
-            flash("회원가입이 완료되었습니다. 로그인해주세요!")
+            # flash("회원 가입이 완료되었습니다. 로그인해주세요!")
             return redirect(url_for('main.index'))
 
         except Exception as e:
             db.session.rollback()
-            flash("가입 중 오류가 발생했습니다. 다시 시도해주세요.")
+            # flash("가입 중 오류가 발생했습니다. 다시 시도해주세요.")
             print(f"Error: {e}")
 
-    # GET 요청 시 혹은 유효성 검사 실패 시
-    return render_template('auth/signup_info.html', form=form)
+    return render_template('auth/signup_profile.html', form=form)
+
 
 @bp.route('/login/', methods=['GET', 'POST'])
 def login():
@@ -142,3 +190,6 @@ def load_logged_in_user():
 def logout():
     session.clear()
     return redirect(url_for('main.index'))
+
+def send_email(email, auth_code):
+    pass

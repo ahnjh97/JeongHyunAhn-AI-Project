@@ -37,46 +37,61 @@ body {
 body, html {
     height: 100%;
     margin: 0;
-    background-color: #f8f9fa; /* 연한 회색 배경 */
 }
 
-/* 모든 항목을 감싸는 컨테이너 (유리 효과 버전) */
 .auth-container {
+    /* 1. 위치 방식 수정: absolute 유지하되 top 비율 제거 */
     position: absolute;
-    top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%); /* 가로 중앙만 정렬 */
 
+    /* 2. 상단 여백 확보: 50% 대신 고정값이나 vh 사용 */
+    top: 100px; /* 화면 최상단에서 50px 지점부터 시작 (스텝 인디케이터 공간) */
+
+    /* 3. 박스 크기 및 스타일 (기존 유지) */
     width: 100%;
     max-width: 450px;
     padding: 40px;
-
-    /* 핵심: 반투명 배경 (흰색 70~80% 투명도) */
     background: rgba(255, 255, 255, 0.2);
-
-    /* 핵심: 뒤쪽 배경을 흐리게 (유리 질감) */
     backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px); /* 사파리 브라우저 지원 */
-
-    /* 핵심: 미세한 빛 반사 효과 (흰색 테두리) */
+    -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 
-    border-radius: 24px; /* 좀 더 둥글게 하면 더 예뻐요 */
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); /* 너무 진하지 않은 그림자 */
-
-    text-align: center;
     z-index: 10;
+}
+
+/* 4. [중요] 내용이 길어질 때 바닥이 잘리지 않도록 body 설정 보완 */
+body {
+    min-height: 100vh;   /* 최소 화면 높이 유지 */
+    position: relative;  /* absolute 자식의 기준점 */
+    overflow-y: auto;    /* 스크롤 허용 */
 }
 
 /* 1. 입력 섹션 전체 (너비 제한) */
 .input-section {
     text-align: left;
-    margin-top: 25px;
-    margin-bottom: 30px;
     width: 100%;
-    max-width: 400px; /* 전체적인 너비를 400px로 제한하여 너무 커지지 않게 함 */
+    max-width: 400px;
     margin-left: auto;
     margin-right: auto;
+
+    /* [수정] 위쪽 마진을 0으로 해서 천장에 붙는 현상 방지 + 아래쪽만 여백 */
+    margin-top: 0;
+    margin-bottom: 25px;
+
+    /* [추가] 3단계 카드 스타일 직접 이식 */
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+
+    /* [핵심] 상하좌우 대칭 패딩 */
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 /* 2. 라벨 (요청하신 #555 색상 및 왼쪽 정렬) */
@@ -106,28 +121,33 @@ body, html {
 
 /* 박스 클릭(포커스) 시 변화 */
 .code-input-wrapper.email-box:focus-within {
-    background: rgba(255, 255, 255, 0.8); /* 더 하얗게 밝아짐 */
-    border-color: #1da1f2;                /* 아까 고른 하늘색으로 강조 */
-    box-shadow: 0 0 0 4px rgba(29, 161, 242, 0.1); /* 은은한 외곽 빛 효과 */
+    background: rgba(255, 255, 255, 0.6);  /* 포커스 시 살짝만 더 밝게 */
+    border-color: #007bff;                 /* 2단계의 파란색으로 변경 (기존 #1da1f2에서 교체) */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.15); /* 2단계의 은은한 파란 광채 적용 */
 }
 
-/* 2. 실제 입력 필드 (자식) */
+/* 2. 실제 입력 필드 (#email) 수정 */
 #email {
     flex: 1;
-    height: 100%;             /* 부모 박스 높이 꽉 채우기 */
+    width: 100%;
+    /* 높이를 100%로 주되, 브라우저 기본 line-height 간섭 제거 */
+    height: 100% !important;
+    display: block;
+
     background: transparent !important;
     border: none !important;
     outline: none !important;
 
-    /* 텍스트 스타일링 */
-    font-size: 16px;          /* 모바일에서도 확대 안 되는 최적 크기 */
-    color: #333333;
-    font-weight: 500;         /* 너무 가늘지 않게 */
-    letter-spacing: -0.3px;
+    /* 텍스트 스타일 */
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
 
-    /* 입력 시 왼쪽 여백 */
-    padding: 0;
-    margin: 0;
+    /* [중요] 글씨 잘림 방지 핵심 */
+    line-height: normal !important; /* 브라우저가 자동으로 높이를 계산하게 함 */
+    padding: 0 !important;         /* 내부 패딩이 글씨를 밀어내지 않게 0으로 고정 */
+    margin: 0 !important;
+    vertical-align: middle;        /* 텍스트 수직 정렬 보조 */
 }
 
 /* 플레이스홀더를 더 고급스럽게 */
@@ -182,12 +202,6 @@ body, html {
     background-color: #007bff;
 }
 
-.code-input-wrapper.email-box {
-    flex-direction: column;    /* 가로가 아닌 세로로 배치 */
-    align-items: flex-start;   /* 왼쪽 정렬 */
-    padding: 20px 25px;        /* 상하 여백을 더 넉넉히 */
-}
-
 .email-box label {
     margin-bottom: 15px;       /* 라벨과 인풋 사이 간격 */
     margin-left: 0;
@@ -198,7 +212,7 @@ body, html {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 40px;
+    margin-top: 10px;
     gap: 15px;
     width: 100%;
 }
@@ -360,6 +374,7 @@ body, html {
     font-size: 0.85rem;
     color: #555; /* 너무 진하지 않은 은은한 색상 */
     margin-top: 6px;           /* 입력창과의 간격을 확실히 벌림 */
+    margin-bottom: 5px !important;  /* 핵심: 아래쪽 여백을 거의 없앰 */
     padding-left: 5px;          /* 왼쪽 정렬 라인 맞춤 */
     line-height: 1.5;           /* 줄 간격 조절로 가독성 향상 */
     letter-spacing: -0.02em;    /* 살짝 좁혀서 세련된 느낌 */
@@ -386,13 +401,6 @@ body, html {
     background: rgba(0, 123, 255, 0.2);
 }
 
-/* 1단계 전용: 버튼을 가로로 길게, 중앙에 배치 */
-.button-group-center {
-    display: flex;
-    justify-content: center;
-    margin-top: 35px;
-}
-
 .btn-outline-wide {
     /* 1. 내부 여백 및 폰트 통일 */
     padding: 10px 0; /* 세로만 주고 가로는 width로 조절하거나 적당히 배분 */
@@ -414,4 +422,162 @@ body, html {
 
     background-color: #007bff;
     color: white;
+}
+
+/* 1. 에러 메시지 공간 미리 확보 */
+.error-msg-container {
+    min-height: 20px;    /* 에러 메시지 한 줄 분량의 높이를 미리 확보 */
+    margin-top: 8px;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+}
+
+.error-msg {
+    color: #e03131;
+    font-size: 0.9rem;
+    padding-left: 5px;
+    font-weight: 500;
+    margin: 0;           /* 컨테이너에서 마진을 조절하므로 0으로 설정 */
+}
+
+.error-msg.info-msg {
+    color: #1da1f2 !important; /* 재전송 문구는 예쁜 하늘색으로! */
+}
+
+/* 자동 완성(Autofill) 시 배경색과 글자색 고정 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    /* 배경을 투명하게 만들기 위해 그림자(box-shadow)를 내부로 꽉 채움 */
+    -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0) inset !important;
+    /* 글자 색상 유지 */
+    -webkit-text-fill-color: #333 !important;
+    /* 글래스모피즘의 핵심인 블러 효과가 풀리지 않도록 설정 */
+    transition: background-color 5000s ease-in-out 0s;
+
+    background-clip: content-box !important;
+}
+
+/* 3단계 전용 카드 스타일 (2단계 email-display-card 기반) */
+.info-group-card {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* 드롭다운 사이의 세로 간격 */
+    text-align: left;
+}
+
+.info-group-card.no-gap {
+    gap: 1px; /* ID/PW 박스 사이의 간격을 더 좁게 */
+}
+
+/* 인풋 박스 자체에 마진이 있다면 제거 */
+.info-group-card.compact .input-section {
+    margin: 0;
+    padding: 0;
+}
+
+/* 드롭다운 스타일 (길이 조절) */
+.form-select-custom {
+    width: 100%;
+    max-width: 200px; /* 드롭다운이 너무 길지 않게 제한 */
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    color: #333;
+    outline: none;
+    cursor: pointer;
+}
+
+/* 라벨 스타일 */
+.small-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 0px;
+    padding-left: 2px;
+}
+
+/* 가로 배치용 로우 */
+.input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.flex-grow {
+    flex: 1;
+}
+
+/* 세로 배치용 컬럼 (PW) */
+.input-column {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+}
+
+/* 미니 에러 컨테이너 (간격 좁게) */
+.error-msg-container.mini {
+    min-height: 15px;
+    margin-top: 2px;
+    margin-bottom: 5px;
+}
+
+.error-msg-container.mini .error-msg {
+    font-size: 0.75rem;
+}
+
+/* 3단계 인풋 필드 글자 스타일 (자간 정상화) */
+#username, #password1, #password2 {
+    letter-spacing: normal !important;
+    font-size: 0.95rem;
+}
+
+/* 가로 분할 배치를 위한 로우 */
+.input-row-split {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px; /* 두 드롭다운 사이의 가로 간격 */
+    width: 100%;
+}
+
+/* 개별 항목 (반 너비 차지) */
+.flex-half {
+    flex: 0 0 calc(50% - 7.5px); /* 딱 절반에서 간격의 반을 뺌 */
+}
+
+/* 드롭다운 자체 스타일 (너비 제한 제거 후 가로 배치 너비 따름) */
+.form-select-custom {
+    width: 100%;
+    padding: 6px 10px; /* 내부 높이 축소 */
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    color: #333;
+    outline: none;
+    cursor: pointer;
+    box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+}
+
+/* 로우 내 드롭다운은 부모 너비 100% 사용 */
+.form-select-custom.full-width {
+    max-width: none;
+}
+
+/* 기저 질환 전용 (따로 배치되므로 너비 제한 유지) */
+.disease-select {
+    max-width: 180px;
 }
