@@ -81,6 +81,7 @@ def signup_email():
         #     return redirect(url_for('auth.signup_account'))
         # else:
         #     flash("인증 코드가 일치하지 않습니다.")
+
         return redirect(url_for('auth.signup_account'))
 
     return render_template('auth/signup_email.html')
@@ -90,7 +91,7 @@ def signup_email():
 def signup_account():
     form = AccountForm()
 
-    # [보안] 2단계 인증 여부 확인
+    # # [보안] 2단계 인증 여부 확인
     # if not session.get('auth_verified'):
     #     return redirect(url_for('auth.signup'))
 

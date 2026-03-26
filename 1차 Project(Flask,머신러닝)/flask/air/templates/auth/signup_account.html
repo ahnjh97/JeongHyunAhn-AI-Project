@@ -19,7 +19,7 @@
       <div class="input-section">
         <label>아이디를 입력해 주세요</label>
         <div class="input-row">
-          <div class="code-input-wrapper flex-grow">
+          <div class="code-input-wrapper">
             {{ form.username(id="username") }}
           </div>
           <button type="button" class="btn-resend" onclick="checkDuplicate()">중복 확인</button>
@@ -57,6 +57,26 @@
 </div>
 
 <script>
+
+// 1. [실시간] 아이디 길이 검증 (타이핑할 때마다)
+document.getElementById('username').addEventListener('input', function() {
+    const errorMsg = document.getElementById('id-error');
+    const val = this.value.trim();
+
+    // 상태 초기화 (수정 시 다시 중복확인 필요)
+    this.dataset.checked = "false";
+
+    if (val.length === 0) {
+        errorMsg.innerText = "";
+    } else if (val.length < 3 || val.length > 25) {
+        errorMsg.innerText = "아이디는 3자 이상 25자 이하로 입력해 주세요.";
+        errorMsg.style.color = "#e03131"; // 에러: 빨간색
+    } else {
+        errorMsg.innerText = "";
+    }
+});
+
+// 2. [버튼 클릭] 중복 확인 실행
   function checkDuplicate() {
     const usernameInput = document.getElementById('username');
     const errorMsg = document.getElementById('id-error');
@@ -93,6 +113,49 @@
         errorMsg.innerText = "서버 통신 오류가 발생했습니다.";
     });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const pw1 = document.getElementById('password1');
+    const pw2 = document.getElementById('password2');
+    const pwError = document.getElementById('pw-error');
+    const pw2Error = document.getElementById('pw2-error');
+
+    // 공통 스타일 함수 (아이디 중복확인과 색상 통일)
+    function showMsg(element, text, isSuccess) {
+        element.innerText = text;
+        element.style.color = isSuccess ? "#1da1f2" : "#e03131";
+    }
+
+    function validate() {
+        const v1 = pw1.value;
+        const v2 = pw2.value;
+
+        // 1. 비밀번호1 검증 (길이 등)
+        if (v1.length > 0) {
+            if (v1.length < 8) {
+                showMsg(pwError, "8자 이상 입력해 주세요.", false);
+            } else {
+                showMsg(pwError, "사용 가능한 비밀번호입니다.", true);
+            }
+        } else {
+            pwError.innerText = "";
+        }
+
+        // 2. 비밀번호2 검증 (일치 여부)
+        if (v2.length > 0) {
+            if (v1 === v2) {
+                showMsg(pw2Error, "비밀번호가 일치합니다.", true);
+            } else {
+                showMsg(pw2Error, "비밀번호가 일치하지 않습니다.", false);
+            }
+        } else {
+            pw2Error.innerText = "";
+        }
+    }
+
+    pw1.addEventListener('input', validate);
+    pw2.addEventListener('input', validate);
+});
 </script>
 
 {% endblock %}

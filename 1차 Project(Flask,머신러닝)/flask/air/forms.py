@@ -34,9 +34,15 @@ class ProfileForm(FlaskForm):
 
 class AccountForm(FlaskForm):
     username = StringField('아이디', validators=[DataRequired(), Length(min=3, max=25)])
-    password1 = PasswordField('비밀번호', validators=[
-        DataRequired(), EqualTo('password2', '비밀번호가 일치하지 않습니다.')])
-    password2 = PasswordField('비밀번호 확인', validators=[DataRequired()])
+    password1 = PasswordField('비밀번호', [
+        DataRequired(),
+        Length(min=8, message='비밀번호는 8자 이상이어야 합니다.')
+    ])
+    password2 = PasswordField('비밀번호 확인', [
+        DataRequired(),
+        # password1과 일치하는지 확인하고, 에러 시 password2 필드 에러로 처리
+        EqualTo('password1', message='비밀번호가 일치하지 않습니다.')
+    ])
 
 class UserLoginForm(FlaskForm):
     username = StringField('아이디', validators=[DataRequired(), Length(min=3, max=25)])
