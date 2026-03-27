@@ -2,12 +2,41 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f83ae56b-6701-493d-9c9b-215fd41ddda9" name="변경" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/2006-2024_국민건강보험공단-환경성질환(천식)_의료이용정보_외래.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/age_stats_quarterly.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/asthma_cnt_monthly.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/createTable.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/create_table.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/district_code.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/grdp_by_industry.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/grdp_per_capita.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/서울시 등록인구 2014~2024 분기별.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/시군구지역코드.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/일별 데이터/1. 국민건강보험공단_진료건수 정보_감기/2014.1~2023.4 진료정보_감기_시군구(수정본).csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/일별 데이터/1. 국민건강보험공단_진료건수 정보_감기/2023.10~2024.2 진료정보_감기_시군구(수정본).csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/일별 데이터/1. 국민건강보험공단_진료건수 정보_감기/2023.5~2023.9 진료정보_감기_시군구(수정본).csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/일별 데이터/1. 국민건강보험공단_진료건수 정보_감기/2024.3~2024.8 진료정보_감기_시군구(수정본).csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/일별 데이터/2. 국민건강보험공단_진료건수 정보_천식/2014.1~2023.4 진료정보_천식_시군구(수정본).csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/일별 데이터/2. 국민건강보험공단_진료건수 정보_천식/2023.10~2024.2 진료정보_천식_시군구(수정본).csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/일별 데이터/2. 국민건강보험공단_진료건수 정보_천식/2023.5~2023.9 진료정보_천식_시군구(수정본).csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/일별 데이터/2. 국민건강보험공단_진료건수 정보_천식/2024.3~2024.8 진료정보_천식_시군구(수정본).csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/일별 데이터/patient_cnt_daily.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/자치구별 1인당 지역내총생산 및 수준지수(2020년 기준).csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/자치구별 경제활동별 지역내총생산(2020년 기준).csv" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
@@ -16,6 +45,9 @@
   &quot;associatedIndex&quot;: 1
 }</component>
   <component name="ProjectId" id="3BPi1DagXYXwdkQfsp0ax5pLR26" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -27,21 +59,32 @@
     "Python.air_quality_hourly.executor": "Run",
     "Python.asthma_cnt_monthly.executor": "Run",
     "Python.createTable.executor": "Run",
+    "Python.create_train_table.executor": "Run",
     "Python.district_code.executor": "Run",
+    "Python.execute_sql_file.executor": "Run",
     "Python.grdp_by_industry.executor": "Run",
     "Python.grdp_per_capita.executor": "Run",
     "Python.patient_cnt_daily.executor": "Run",
+    "Python.train_rf.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/AI-Project/1차 Project(Flask,머신러닝)/DB",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\AI-Project\1차 Project(Flask,머신러닝)\DB\학습 전용\rf" />
+      <recent name="C:\AI-Project\1차 Project(Flask,머신러닝)\DB\원본 데이터" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-2653e85de345-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.31033.139" />
+        <option value="bundled-python-sdk-1cd77e80b48f-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.32098.74" />
       </set>
     </attachedChunks>
   </component>
