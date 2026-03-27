@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f83ae56b-6701-493d-9c9b-215fd41ddda9" name="변경" comment="">
-      <change beforePath="$PROJECT_DIR$/../flask/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/../flask/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -12,9 +12,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 1
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
   <component name="ProjectId" id="3BPi1DagXYXwdkQfsp0ax5pLR26" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -23,6 +23,14 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.age_stats_quarterly.executor": "Run",
+    "Python.air_quality_hourly.executor": "Run",
+    "Python.asthma_cnt_monthly.executor": "Run",
+    "Python.createTable.executor": "Run",
+    "Python.district_code.executor": "Run",
+    "Python.grdp_by_industry.executor": "Run",
+    "Python.grdp_per_capita.executor": "Run",
+    "Python.patient_cnt_daily.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
