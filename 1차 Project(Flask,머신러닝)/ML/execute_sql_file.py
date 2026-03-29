@@ -1,11 +1,5 @@
+import db_config
 import oracledb
-import platform
-
-if platform.system() == 'Windows':
-    oracledb.init_oracle_client(lib_dir=r"C:\oraclexe\instantclient_19_25")
-else:
-    oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_19_25")
-db_config = { 'user': 'scott', 'password': 'tiger','dsn': 'localhost:1521/xe',}
 
 def execute_sql_file(filename):
     connection = None
@@ -17,7 +11,7 @@ def execute_sql_file(filename):
         sql_commands = [cmd.strip() for cmd in full_sql.split(';') if cmd.strip()]
 
         # DB 연결
-        connection = oracledb.connect(**db_config)
+        connection = db_config.get_conn()
         cursor = connection.cursor()
 
         print()

@@ -1,5 +1,4 @@
-import oracledb
-import platform
+import db_config
 import pandas as pd
 import numpy as np
 import joblib
@@ -8,13 +7,7 @@ from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import TimeSeriesSplit
 
-if platform.system() == 'Windows':
-    oracledb.init_oracle_client(lib_dir=r"C:\oraclexe\instantclient_19_25")
-else:
-    oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_19_25")
-db_config = {'user': 'scott', 'password': 'tiger', 'dsn': 'localhost:1521/xe'}
-
-def train_disease_xgb(df, disease_type):
+def train_disease_xgb(df, disease_type, run_cv=False):
     """
     XGBoost를 이용한 질병별 4일치(D0~D3) 발생률 예측 모델
     (One-Hot Encoding 및 Scaling 제거 버전)
@@ -72,27 +65,28 @@ def train_disease_xgb(df, disease_type):
 
     # [6] 시계열 교차 검증 (TimeSeriesSplit) 실행
     # n_splits=5 는 데이터를 5개 구간으로 쪼개서 점진적으로 학습/검증을 반복함
-    tscv = TimeSeriesSplit(n_splits=5)
-    cv_scores = []
+    if run_cv:
+        tscv = TimeSeriesSplit(n_splits=5)
+        cv_scores = []
 
-    print(f"🔄 {disease_type} 시계열 교차 검증(TimeSeriesSplit) 진행 중...")
+        print(f"🔄 {disease_type} 시계열 교차 검증(TimeSeriesSplit) 진행 중...")
 
-    # X_train 내부에서 인덱스를 시계열 순서대로 쪼갬
-    for i, (tr_idx, val_idx) in enumerate(tscv.split(X_train)):
-        X_cv_train, X_cv_val = X_train.iloc[tr_idx], X_train.iloc[val_idx]
-        y_cv_train, y_cv_val = y_train.iloc[tr_idx], y_train.iloc[val_idx]
+        # X_train 내부에서 인덱스를 시계열 순서대로 쪼갬
+        for i, (tr_idx, val_idx) in enumerate(tscv.split(X_train)):
+            X_cv_train, X_cv_val = X_train.iloc[tr_idx], X_train.iloc[val_idx]
+            y_cv_train, y_cv_val = y_train.iloc[tr_idx], y_train.iloc[val_idx]
 
-        cv_multi_model = MultiOutputRegressor(xgb_model)
-        cv_multi_model.fit(X_cv_train, y_cv_train)
+            cv_multi_model = MultiOutputRegressor(xgb_model)
+            cv_multi_model.fit(X_cv_train, y_cv_train)
 
-        cv_preds = cv_multi_model.predict(X_cv_val)
-        # 로그 복원 후 R2 계산
-        cv_r2 = r2_score(np.expm1(y_cv_val), np.expm1(cv_preds))
-        cv_scores.append(cv_r2)
-        print(f"   📍 Fold {i + 1} R2 Score: {cv_r2:.4f}")
+            cv_preds = cv_multi_model.predict(X_cv_val)
+            # 로그 복원 후 R2 계산
+            cv_r2 = r2_score(np.expm1(y_cv_val), np.expm1(cv_preds))
+            cv_scores.append(cv_r2)
+            print(f"   📍 Fold {i + 1} R2 Score: {cv_r2:.4f}")
 
-    avg_cv_r2 = np.mean(cv_scores)
-    print(f"📊 평균 교차 검증 R2 Score: {avg_cv_r2:.4f}")
+        avg_cv_r2 = np.mean(cv_scores)
+        print(f"📊 평균 교차 검증 R2 Score: {avg_cv_r2:.4f}")
 
     # MultiOutput 래퍼 적용
     multi_model = MultiOutputRegressor(xgb_model)
@@ -126,7 +120,7 @@ def train_disease_xgb(df, disease_type):
 def main():
     try:
         # 데이터 로드
-        conn = oracledb.connect(**db_config)
+        conn = db_config.get_conn()
         print("🔗 DB 연결 성공!")
         df = pd.read_sql("SELECT * FROM TRAIN_SET ORDER BY measure_date, dist_code", conn)
         conn.close()
