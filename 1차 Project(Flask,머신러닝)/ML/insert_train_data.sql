@@ -58,48 +58,110 @@ GROUP BY A.dist_code, TRUNC(A.measure_time), EXTRACT(YEAR FROM A.measure_time), 
 TRUNCATE TABLE TRAIN_SET;
 
 INSERT INTO TRAIN_SET
+-- [A] 미세먼지 연속 시간(STREAK) 사전 계산 (기준: PM10 >= 151, PM25 >= 76)
+WITH STREAK_CALC AS (
+    SELECT
+        dist_code,
+        TRUNC(measure_time) as m_date,
+        CASE WHEN pm10 >= 151 THEN
+            COUNT(*) OVER (PARTITION BY dist_code, TRUNC(measure_time), (row_num - grp_pm10))
+            ELSE 0 END as streak_pm10_raw,
+        CASE WHEN pm25 >= 76 THEN
+            COUNT(*) OVER (PARTITION BY dist_code, TRUNC(measure_time), (row_num - grp_pm25))
+            ELSE 0 END as streak_pm25_raw
+    FROM (
+        SELECT
+            dist_code, measure_time, pm10, pm25,
+            ROW_NUMBER() OVER (PARTITION BY dist_code, TRUNC(measure_time) ORDER BY measure_time) as row_num,
+            ROW_NUMBER() OVER (PARTITION BY dist_code, TRUNC(measure_time) ORDER BY measure_time) -
+            ROW_NUMBER() OVER (PARTITION BY dist_code, TRUNC(measure_time), CASE WHEN pm10 >= 151 THEN 1 ELSE 0 END ORDER BY measure_time) as grp_pm10,
+            ROW_NUMBER() OVER (PARTITION BY dist_code, TRUNC(measure_time) ORDER BY measure_time) -
+            ROW_NUMBER() OVER (PARTITION BY dist_code, TRUNC(measure_time), CASE WHEN pm25 >= 76 THEN 1 ELSE 0 END ORDER BY measure_time) as grp_pm25
+        FROM AIR_QUALITY_HOURLY
+    )
+),
+DAILY_STREAK AS (
+    SELECT
+        dist_code, m_date,
+        MAX(streak_pm10_raw) as pm10_streak,
+        MAX(streak_pm25_raw) as pm25_streak
+    FROM STREAK_CALC
+    GROUP BY dist_code, m_date
+)
+-- [B] 최종 데이터 병합 및 삽입
 SELECT
-    dist_code, m_date,
-    -- [D0]
-    pm10_avg, pm10_max, 0, -- pm10_streak (추후 연산 시 교체)
-    pm25_avg, pm25_max, 0, -- pm25_streak
-    temp_avg, (temp_max - temp_min), temp_min, temp_max,
-    (temp_avg - LAG(temp_avg, 1) OVER (PARTITION BY dist_code ORDER BY m_date)),
+    V.dist_code, V.m_date,
+    -- [D0] 기상 정보
+    V.pm10_avg, V.pm10_max, NVL(S.pm10_streak, 0),
+    V.pm25_avg, V.pm25_max, NVL(S.pm25_streak, 0),
+    V.temp_avg, (V.temp_max - V.temp_min), V.temp_min, V.temp_max,
+    (V.temp_avg - LAG(V.temp_avg, 1) OVER (PARTITION BY V.dist_code ORDER BY V.m_date)) as temp_diff_prev_d0,
 
-    -- [D-1]
-    LAG(pm10_avg, 1) OVER (PARTITION BY dist_code ORDER BY m_date), 0,
-    LAG(pm25_avg, 1) OVER (PARTITION BY dist_code ORDER BY m_date), 0,
-    LAG(temp_min, 1) OVER (PARTITION BY dist_code ORDER BY m_date),
+    -- [D-1] 기상 및 STREAK 과거치
+    LAG(V.pm10_avg, 1) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(NVL(S.pm10_streak, 0), 1) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(V.pm25_avg, 1) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(NVL(S.pm25_streak, 0), 1) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(V.temp_min, 1) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
 
     -- [D-2]
-    LAG(pm10_avg, 2) OVER (PARTITION BY dist_code ORDER BY m_date), 0,
-    LAG(pm25_avg, 2) OVER (PARTITION BY dist_code ORDER BY m_date), 0,
-    LAG(temp_min, 2) OVER (PARTITION BY dist_code ORDER BY m_date),
+    LAG(V.pm10_avg, 2) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(NVL(S.pm10_streak, 0), 2) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(V.pm25_avg, 2) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(NVL(S.pm25_streak, 0), 2) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(V.temp_min, 2) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
 
     -- [D-3]
-    LAG(pm10_avg, 3) OVER (PARTITION BY dist_code ORDER BY m_date), 0,
-    LAG(pm25_avg, 3) OVER (PARTITION BY dist_code ORDER BY m_date), 0,
-    LAG(temp_min, 3) OVER (PARTITION BY dist_code ORDER BY m_date),
+    LAG(V.pm10_avg, 3) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(NVL(S.pm10_streak, 0), 3) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(V.pm25_avg, 3) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(NVL(S.pm25_streak, 0), 3) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LAG(V.temp_min, 3) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
 
-    -- [장기/사회]
-    AVG(pm10_avg) OVER (PARTITION BY dist_code ORDER BY m_date ROWS 2 PRECEDING), -- ma_72h
-    AVG(pm25_avg) OVER (PARTITION BY dist_code ORDER BY m_date ROWS 2 PRECEDING), -- ma_72h
-    (TO_CHAR(m_date, 'D') - 1), -- day_of_week
-    0, -- is_holiday
-    EXTRACT(MONTH FROM m_date), -- std_month
-    pop_child_ratio,            -- 어린이 비율
-    pop_old_ratio,              -- 노인 비율
-    grdp_pc,                    -- 1인당 지역내총생산
-    pop_total,                  -- 인구
+    -- [장기/사회 요인]
+    AVG(V.pm10_avg) OVER (PARTITION BY V.dist_code ORDER BY V.m_date ROWS 2 PRECEDING) as pm10_ma_72h,
+    AVG(V.pm25_avg) OVER (PARTITION BY V.dist_code ORDER BY V.m_date ROWS 2 PRECEDING) as pm25_ma_72h,
+    (TO_CHAR(V.m_date, 'D') - 1) as day_of_week, -- 0:월 ~ 6:일 (Oracle 1:일 ~ 7:토 기준 보정 필요시 확인)
+
+    -- [IS_HOLIDAY 로직]
+    CASE
+        WHEN TO_CHAR(V.m_date, 'D') IN ('1', '7') THEN 1 -- 토(7), 일(1)
+        WHEN TO_CHAR(V.m_date, 'MMDD') IN (
+            '0101', -- 신정
+            '0301', -- 삼일절
+            '0505', -- 어린이날
+            '0606', -- 현충일
+            '0815', -- 광복절
+            '1003', -- 개천절
+            '1009', -- 한글날
+            '1225'  -- 크리스마스
+        ) THEN 1
+        ELSE 0
+    END as is_holiday,
+
+    EXTRACT(MONTH FROM V.m_date) as std_month,
+    V.pop_child_ratio,
+    V.pop_old_ratio,
+    V.grdp_pc,
+    V.pop_total,
+
+    -- [과거 환자 수 추이]
+    LAG(V.cold_cnt, 1) OVER (PARTITION BY V.dist_code ORDER BY V.m_date) as cold_prev_d1,
+    LAG(V.cold_cnt, 2) OVER (PARTITION BY V.dist_code ORDER BY V.m_date) as cold_prev_d2,
+    LAG(V.cold_cnt, 3) OVER (PARTITION BY V.dist_code ORDER BY V.m_date) as cold_prev_d3,
+    LAG(V.asthma_cnt, 1) OVER (PARTITION BY V.dist_code ORDER BY V.m_date) as asthma_prev_d1,
+    LAG(V.asthma_cnt, 2) OVER (PARTITION BY V.dist_code ORDER BY V.m_date) as asthma_prev_d2,
+    LAG(V.asthma_cnt, 3) OVER (PARTITION BY V.dist_code ORDER BY V.m_date) as asthma_prev_d3,
 
     -- [Y 타겟]
-    cold_cnt,
-    LEAD(cold_cnt, 1) OVER (PARTITION BY dist_code ORDER BY m_date),
-    LEAD(cold_cnt, 2) OVER (PARTITION BY dist_code ORDER BY m_date),
-    LEAD(cold_cnt, 3) OVER (PARTITION BY dist_code ORDER BY m_date),
-    asthma_cnt,
-    LEAD(asthma_cnt, 1) OVER (PARTITION BY dist_code ORDER BY m_date),
-    LEAD(asthma_cnt, 2) OVER (PARTITION BY dist_code ORDER BY m_date),
-    LEAD(asthma_cnt, 3) OVER (PARTITION BY dist_code ORDER BY m_date)
+    V.cold_cnt,
+    LEAD(V.cold_cnt, 1) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LEAD(V.cold_cnt, 2) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LEAD(V.cold_cnt, 3) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    V.asthma_cnt,
+    LEAD(V.asthma_cnt, 1) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LEAD(V.asthma_cnt, 2) OVER (PARTITION BY V.dist_code ORDER BY V.m_date),
+    LEAD(V.asthma_cnt, 3) OVER (PARTITION BY V.dist_code ORDER BY V.m_date)
 
-FROM V_TRAIN;
+FROM V_TRAIN V
+LEFT JOIN DAILY_STREAK S ON V.dist_code = S.dist_code AND V.m_date = S.m_date;

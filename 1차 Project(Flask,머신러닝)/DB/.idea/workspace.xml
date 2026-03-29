@@ -2,29 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f83ae56b-6701-493d-9c9b-215fd41ddda9" name="변경" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/2006-2024_국민건강보험공단-환경성질환(천식)_의료이용정보_외래.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/age_stats_quarterly.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/asthma_cnt_monthly.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/createTable.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/create_table.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/district_code.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/grdp_by_industry.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/grdp_per_capita.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/서울시 등록인구 2014~2024 분기별.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/시군구지역코드.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/일별 데이터/1. 국민건강보험공단_진료건수 정보_감기/2014.1~2023.4 진료정보_감기_시군구(수정본).csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/일별 데이터/1. 국민건강보험공단_진료건수 정보_감기/2023.10~2024.2 진료정보_감기_시군구(수정본).csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/일별 데이터/1. 국민건강보험공단_진료건수 정보_감기/2023.5~2023.9 진료정보_감기_시군구(수정본).csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/일별 데이터/1. 국민건강보험공단_진료건수 정보_감기/2024.3~2024.8 진료정보_감기_시군구(수정본).csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/일별 데이터/2. 국민건강보험공단_진료건수 정보_천식/2014.1~2023.4 진료정보_천식_시군구(수정본).csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/일별 데이터/2. 국민건강보험공단_진료건수 정보_천식/2023.10~2024.2 진료정보_천식_시군구(수정본).csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/일별 데이터/2. 국민건강보험공단_진료건수 정보_천식/2023.5~2023.9 진료정보_천식_시군구(수정본).csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/일별 데이터/2. 국민건강보험공단_진료건수 정보_천식/2024.3~2024.8 진료정보_천식_시군구(수정본).csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/일별 데이터/patient_cnt_daily.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/자치구별 1인당 지역내총생산 및 수준지수(2020년 기준).csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/자치구별 경제활동별 지역내총생산(2020년 기준).csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/일별 데이터/patient_cnt_daily.py" beforeDir="false" afterPath="$PROJECT_DIR$/일별 데이터/patient_cnt_daily.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ML/RandomForest/train_rf.py" beforeDir="false" afterPath="$PROJECT_DIR$/../ML/RandomForest/train_rf.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,6 +16,17 @@
       <list>
         <option value="Python Script" />
       </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
     </option>
   </component>
   <component name="Git.Settings">
@@ -52,29 +43,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.age_stats_quarterly.executor": "Run",
-    "Python.air_quality_hourly.executor": "Run",
-    "Python.asthma_cnt_monthly.executor": "Run",
-    "Python.createTable.executor": "Run",
-    "Python.create_train_table.executor": "Run",
-    "Python.district_code.executor": "Run",
-    "Python.execute_sql_file.executor": "Run",
-    "Python.grdp_by_industry.executor": "Run",
-    "Python.grdp_per_capita.executor": "Run",
-    "Python.patient_cnt_daily.executor": "Run",
-    "Python.train_rf.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/AI-Project/1차 Project(Flask,머신러닝)/DB",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.age_stats_quarterly.executor&quot;: &quot;Run&quot;,
+    &quot;Python.air_quality_hourly.executor&quot;: &quot;Run&quot;,
+    &quot;Python.asthma_cnt_monthly.executor&quot;: &quot;Run&quot;,
+    &quot;Python.createTable.executor&quot;: &quot;Run&quot;,
+    &quot;Python.create_train_table.executor&quot;: &quot;Run&quot;,
+    &quot;Python.district_code.executor&quot;: &quot;Run&quot;,
+    &quot;Python.execute_sql_file.executor&quot;: &quot;Run&quot;,
+    &quot;Python.grdp_by_industry.executor&quot;: &quot;Run&quot;,
+    &quot;Python.grdp_per_capita.executor&quot;: &quot;Run&quot;,
+    &quot;Python.patient_cnt_daily.executor&quot;: &quot;Run&quot;,
+    &quot;Python.train_rf.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/JeongHyunAhn-AI-Project/1차 Project(Flask,머신러닝)/DB&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\AI-Project\1차 Project(Flask,머신러닝)\DB\학습 전용\rf" />
@@ -84,7 +79,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-1cd77e80b48f-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.32098.74" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.31033.139" />
+        <option value="bundled-python-sdk-2653e85de345-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.31033.139" />
       </set>
     </attachedChunks>
   </component>
@@ -95,7 +91,22 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1774396891871</updated>
+      <workItem from="1774669023830" duration="238000" />
+      <workItem from="1774700828281" duration="152000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/DB$age_stats_quarterly.coverage" NAME="age_stats_quarterly 커버리지 결과" MODIFIED="1774669138993" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DB$asthma_cnt_monthly.coverage" NAME="asthma_cnt_monthly 커버리지 결과" MODIFIED="1774669143838" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DB$grdp_per_capita.coverage" NAME="grdp_per_capita 커버리지 결과" MODIFIED="1774669153743" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DB$grdp_by_industry.coverage" NAME="grdp_by_industry 커버리지 결과" MODIFIED="1774669149627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DB$patient_cnt_daily.coverage" NAME="patient_cnt_daily 커버리지 결과" MODIFIED="1774700950909" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/일별 데이터" />
+    <SUITE FILE_PATH="coverage/DB$district_code.coverage" NAME="district_code 커버리지 결과" MODIFIED="1774669135209" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DB$air_quality_hourly.coverage" NAME="air_quality_hourly 커버리지 결과" MODIFIED="1774669171185" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/시간별 데이터" />
+    <SUITE FILE_PATH="coverage/DB$createTable.coverage" NAME="createTable 커버리지 결과" MODIFIED="1774669077903" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

@@ -1,13 +1,11 @@
-import pandas as pd
 import oracledb
 import platform
-import joblib
+import pandas as pd
 import numpy as np
+import joblib
 from lightgbm import LGBMRegressor
 from sklearn.multioutput import MultiOutputRegressor
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, r2_score
-from sklearn.preprocessing import StandardScaler
 
 if platform.system() == 'Windows':
     oracledb.init_oracle_client(lib_dir=r"C:\oraclexe\instantclient_19_25")
@@ -18,69 +16,88 @@ db_config = {'user': 'scott', 'password': 'tiger', 'dsn': 'localhost:1521/xe'}
 
 def train_disease_lgbm(df, disease_type):
     """
-    LightGBM 기반 질병별 4일치 발생률 예측 모델
+    LightGBM을 이용한 질병별 4일치(D0~D3) 발생률 예측 모델
+    (Native Categorical 지원 버전)
     """
-    print(f"\n🚀 [{disease_type} LightGBM 모델] 학습 시작...")
+    print(f"\n🚀 [{disease_type} 발생률 LightGBM 모델] 학습 시작 (Target: 1만명당 환자수)...")
 
-    # [1] 타겟 추출 및 정렬 (비율 변환 로직 동일)
-    target_cnt_cols = [col for col in df.columns if disease_type.upper() in col.upper() and 'CNT_D' in col.upper()]
-    target_cnt_cols.sort()
+    # [1] 타겟 설정 (D0 ~ D+3)
+    target_cnt_cols = [
+        f"{disease_type.upper()}_CNT_D0",
+        f"{disease_type.upper()}_CNT_D_PLUS_1",
+        f"{disease_type.upper()}_CNT_D_PLUS_2",
+        f"{disease_type.upper()}_CNT_D_PLUS_3"
+    ]
 
+    # [2] 발생률 및 로그 변환
     y_rate = pd.DataFrame()
     for col in target_cnt_cols:
-        y_rate[col] = (df[col] / df['POP_TOTAL'].replace(0, np.nan)) * 10000
+        rate = (df[col] / df['POP_TOTAL'].replace(0, np.nan)) * 10000
+        y_rate[col] = np.log1p(rate)
     y_rate = y_rate.fillna(0)
 
-    # [2] 특징(X) 생성
-    all_cnt_cols = [col for col in df.columns if 'CNT_D' in col.upper()]
-    X_base = df.drop(columns=['DIST_CODE', 'MEASURE_DATE', 'POP_TOTAL'] + all_cnt_cols)
-    X_dist = pd.get_dummies(df['DIST_CODE'], prefix='DIST')
-    X = pd.concat([X_base, X_dist], axis=1)
+    # [3] 특징(X) 선택
+    all_target_cols = [col for col in df.columns if 'CNT_D' in col.upper()]
+    all_prev_cols = ["COLD_PREV_D1", "COLD_PREV_D2", "COLD_PREV_D3",
+                     "ASTHMA_PREV_D1", "ASTHMA_PREV_D2", "ASTHMA_PREV_D3"]
 
-    # [3] 데이터 분할 및 스케일링
-    X_train, X_test, y_train, y_test = train_test_split(X, y_rate, test_size=0.2, random_state=42)
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    other_disease_prev_cols = [col for col in all_prev_cols if disease_type.upper() not in col]
 
-    # [4] LightGBM 모델 설정
-    # n_estimators: 반복 횟수, learning_rate: 학습률, num_leaves: 모델 복잡도 조절
-    lgbm_base = LGBMRegressor(
-        n_estimators=300,
+    drop_cols = ['MEASURE_DATE', 'POP_TOTAL', 'DAY_OF_WEEK'] + all_target_cols + other_disease_prev_cols
+    X_final = df.drop(columns=drop_cols).copy()
+
+    # 카테고리 타입 변환
+    X_final['DIST_CODE'] = X_final['DIST_CODE'].astype('category')
+
+    # [4] 데이터 분할
+    train_mask = (df['MEASURE_DATE'] >= '2015-01-01') & (df['MEASURE_DATE'] <= '2021-12-31')
+    test_mask = (df['MEASURE_DATE'] >= '2022-01-01') & (df['MEASURE_DATE'] <= '2022-12-31')
+
+    X_train, y_train = X_final[train_mask], y_rate[train_mask]
+    X_test, y_test = X_final[test_mask], y_rate[test_mask]
+
+    # [5] LightGBM 모델 설정
+    lgbm_model = LGBMRegressor(
+        n_estimators=1000,
         learning_rate=0.05,
-        num_leaves=31,
-        random_state=42,
+        num_leaves=64,  # XGBoost의 max_depth와 유사한 개념 (2^max_depth 보단 작게)
+        max_depth=7,
+        subsample=0.8,
+        colsample_bytree=0.8,
         n_jobs=-1,
-        importance_type='gain',  # 변수 중요도를 결정에 기여한 '이득' 기준으로 산출
-        force_col_wise=True  # 대용량 데이터 연산 최적화
+        random_state=42,
+        importance_type='gain',  # 변수 중요도를 결정 트리 분기 시 이득으로 계산
+        verbose=-1  # 불필요한 로그 출력 방지
     )
 
-    model = MultiOutputRegressor(lgbm_base)
-    model.fit(X_train_scaled, y_train)
+    # MultiOutput 적용 (이 안에서 모델 4개가 각각 학습됩니다)
+    multi_model = MultiOutputRegressor(lgbm_model)
+    multi_model.fit(X_train, y_train)
 
-    # [5] 성능 평가
-    X_test_scaled_df = pd.DataFrame(X_test_scaled, columns=X.columns)
-    preds = model.predict(X_test_scaled_df)
-    mae = mean_absolute_error(y_test, preds)
-    r2 = r2_score(y_test, preds)
+    # [6] 예측 및 복원
+    preds_log = multi_model.predict(X_test)
+    y_test_original = np.expm1(y_test)
+    preds_original = np.expm1(preds_log)
 
-    print(f"\n✅ {disease_type} LightGBM 학습 완료!")
+    # 평가
+    mae = mean_absolute_error(y_test_original, preds_original)
+    r2 = r2_score(y_test_original, preds_original)
+
+    print(f"✅ {disease_type} LightGBM 학습 완료!")
     print(f"📈 전체 평균 R2 Score: {r2:.4f}")
     print(f"📊 전체 평균 MAE: {mae:.4f} (명/1만명)")
 
-    # [6] 중요도 확인 (D0 모델 기준)
-    importances = pd.Series(model.estimators_[0].feature_importances_, index=X.columns).sort_values(ascending=False)
-    print(f"💡 [D0 기준] 중요 변수 TOP 5:\n{importances.head(5)}")
-
-    # [7] 저장
+    # [7] 모델 저장
     model_filename = f'model_{disease_type.lower()}_lgbm.pkl'
-    scaler_filename = f'scaler_{disease_type.lower()}_lgbm.pkl'
+    joblib.dump(multi_model, model_filename)
+    print(f"💾 모델 저장 완료: {model_filename}")
 
-    joblib.dump(model, model_filename)
-    joblib.dump(scaler, scaler_filename)
+    # 중요도 확인
+    first_model = multi_model.estimators_[0]
+    importances = pd.Series(first_model.feature_importances_, index=X_train.columns).sort_values(ascending=False)
+    print(f"💡 중요 변수 TOP 5 (D0 기준):\n{importances.head(5)}")
 
-    print(f"💾 저장 완료: {model_filename}, {scaler_filename}")
-    return model
+    return multi_model
 
 def main():
     try:
@@ -110,7 +127,6 @@ def main():
 
     except Exception as e:
         print(f"❌ 오류 발생: {e}")
-
 
 if __name__ == '__main__':
     main()

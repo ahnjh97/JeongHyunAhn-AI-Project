@@ -51,6 +51,15 @@ CREATE TABLE TRAIN_SET (
     grdp_pc             NUMBER,         -- 1인당 GRDP
     pop_total           NUMBER,         -- 인구
 
+    -- [과거 환자 수 추이 (Lag Features)]
+    cold_prev_d1        NUMBER,         -- 어제 감기 환자 수
+    cold_prev_d2        NUMBER,         -- 그저께 감기 환자 수
+    cold_prev_d3        NUMBER,         -- 3일 전 감기 환자 수
+
+    asthma_prev_d1      NUMBER,         -- 어제 천식 환자 수
+    asthma_prev_d2      NUMBER,         -- 그저께 천식 환자 수
+    asthma_prev_d3      NUMBER,         -- 3일 전 천식 환자 수
+
     -- [Y 타겟: 오늘~3일 후 환자 수]
     cold_cnt_d0         NUMBER,         -- 당일 감기 환자
     cold_cnt_d_plus_1   NUMBER,         -- 1일 후 감기 환자

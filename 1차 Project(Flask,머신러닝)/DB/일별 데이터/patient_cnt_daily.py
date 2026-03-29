@@ -55,7 +55,7 @@ def load_patient_data_interpolated():
         print(f"테이블 초기화 실패 (기존 데이터가 없을 수 있음): {e}")
 
     # 본인의 데이터 폴더 경로 (필요시 수정)
-    base_path = r"C:\AI-Project\1차 Project(Flask,머신러닝)\DB\일별 데이터"
+    base_path = "../일별 데이터"
 
     cold_dir = os.path.join(base_path,  "1. 국민건강보험공단_진료건수 정보_감기")
     asthma_dir = os.path.join(base_path,  "2. 국민건강보험공단_진료건수 정보_천식")
