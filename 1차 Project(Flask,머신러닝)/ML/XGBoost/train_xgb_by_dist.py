@@ -7,12 +7,13 @@ from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import TimeSeriesSplit
 from db_config import get_conn
 
-def train_disease_xgb(df, disease_type, run_cv=False):
+def train_by_district(df, dist, disease_type, run_cv=False):
     """
     XGBoost를 이용한 질병별 4일치(D0~D3) 발생률 예측 모델
-    (One-Hot Encoding 및 Scaling 제거 버전)
     """
-    print(f"\n🔥 [{disease_type} 발생률 XGBoost 모델] 학습 시작 (Target: 1만명당 환자수)...")
+    print(f"\n🔥 [{dist}구 {disease_type} 발생률 XGBoost 모델] 학습 시작 (Target: 1만명당 환자수)...")
+
+    df = df[df['DIST_CODE'] == dist].copy()
 
     # [1] 타겟 추출 (D0 ~ D+3)
     target_cnt_cols = [
@@ -37,11 +38,10 @@ def train_disease_xgb(df, disease_type, run_cv=False):
     # 타 질병 과거치는 모델 혼선을 위해 제거
     other_disease_prev_cols = [col for col in all_prev_cols if disease_type.upper() not in col]
 
-    drop_cols = ['MEASURE_DATE', 'POP_TOTAL'] + all_target_cols + other_disease_prev_cols
+    drop_cols = (['MEASURE_DATE', 'POP_TOTAL', 'DIST_CODE'] + all_target_cols + other_disease_prev_cols)
     X_final = df.drop(columns=drop_cols).copy()
 
     # 범주형으로 설정
-    X_final['DIST_CODE'] = X_final['DIST_CODE'].astype('category')
     X_final['STD_MONTH'] = X_final['STD_MONTH'].astype('category')
     X_final['DAY_OF_WEEK'] = X_final['DAY_OF_WEEK'].astype('category')
 
@@ -54,15 +54,15 @@ def train_disease_xgb(df, disease_type, run_cv=False):
 
     # [5] XGBoost 모델 설정 (범주형 활성화)
     xgb_model = XGBRegressor(
-        n_estimators=1000,
-        learning_rate=0.02,
-        max_depth=8,
+        n_estimators=1000,  # 데이터 양에 맞춰 트리 개수도 약간 조절
+        learning_rate=0.01,
+        max_depth=4,
+        gamma=0.2,
+        min_child_weight=10,  # 트리 분기 시 필요한 최소 샘플 수 (작은 데이터셋에 적합)
         tree_method='hist',
         enable_categorical=True,
-        subsample=0.9,
+        subsample=0.7,
         colsample_bytree=0.7,
-        gamma=0.05,              # 제약을 살짝 풀어 더 세밀하게 가지를 치도록 유도
-        reg_lambda=1.5,         # L2 규제를 살짝 높여 깊이가 깊어진 만큼의 과적합 방지
         n_jobs=-1,
         random_state=42
     )
@@ -80,12 +80,8 @@ def train_disease_xgb(df, disease_type, run_cv=False):
             X_cv_train, X_cv_val = X_train.iloc[tr_idx], X_train.iloc[val_idx]
             y_cv_train, y_cv_val = y_train.iloc[tr_idx], y_train.iloc[val_idx]
 
-            target_col_d0 = y_cv_train.columns[0]
-            cv_threshold = y_cv_train[target_col_d0].quantile(0.8)
-            cv_weights = np.where(y_cv_train[target_col_d0] > cv_threshold, 2.0, 1.0)
-
             cv_multi_model = MultiOutputRegressor(xgb_model)
-            cv_multi_model.fit(X_cv_train, y_cv_train, sample_weight=cv_weights)
+            cv_multi_model.fit(X_cv_train, y_cv_train)
 
             cv_preds = cv_multi_model.predict(X_cv_val)
             # 로그 복원 후 R2 계산
@@ -96,14 +92,9 @@ def train_disease_xgb(df, disease_type, run_cv=False):
         avg_cv_r2 = np.mean(cv_scores)
         print(f"📊 평균 교차 검증 R2 Score: {avg_cv_r2:.4f}")
 
-    # 발생률 상위 20%에 2.0배의 가중치 부여
-    target_col_d0 = y_train.columns[0]
-    threshold = y_train[target_col_d0].quantile(0.8)
-    weights = np.where(y_train[target_col_d0] > threshold, 2.0, 1.0)
-
     # MultiOutput 래퍼 적용
     multi_model = MultiOutputRegressor(xgb_model)
-    multi_model.fit(X_train, y_train, sample_weight=weights)
+    multi_model.fit(X_train, y_train)  # 스케일링 안 한 원본 투입
 
     # [7] 예측 및 복원
     preds_log = multi_model.predict(X_test)
@@ -117,11 +108,6 @@ def train_disease_xgb(df, disease_type, run_cv=False):
     print(f"✅ {disease_type} XGBoost 학습 완료!")
     print(f"📈 전체 평균 R2 Score: {r2:.4f}")
     print(f"📊 전체 평균 MAE: {mae:.4f} (명/1만명)")
-
-    # [8] 모델 저장 (스케일러는 필요 없음)
-    model_filename = f'model_{disease_type.lower()}_seoul.pkl'
-    joblib.dump(multi_model, model_filename)
-    print(f"💾 모델 저장 완료: {model_filename}")
 
     # 중요도 시각화용 데이터
     first_model = multi_model.estimators_[0]
@@ -145,14 +131,20 @@ def main():
             return
 
         print(f"🧹 전처리 완료: {len(df)}행 -> {len(df_clean)}행")
+        dist_list = df['DIST_CODE'].unique()
 
-        # 1. 감기(COLD) 4일치 모델 학습 및 저장
-        train_disease_xgb(df_clean, 'COLD', True)
+        # 구별 모델을 담을 빈 딕셔너리 생성
+        cold_model_dict = {}
+        asthma_model_dict = {}
 
-        # 2. 천식(ASTHMA) 4일치 모델 학습 및 저장
-        train_disease_xgb(df_clean, 'ASTHMA', True)
+        # 자치구별 4일치 모델 학습 및 저장
+        for dist in dist_list:
+            cold_model_dict[dist] = train_by_district(df_clean, dist, 'COLD')
+            asthma_model_dict[dist] = train_by_district(df_clean, dist, 'ASTHMA')
 
-        print("\n✨ 모든 모델 학습 및 저장 작업이 완료되었습니다!")
+        joblib.dump(cold_model_dict, 'model_cold_all_districts.pkl')
+        joblib.dump(asthma_model_dict, 'model_asthma_all_districts.pkl')
+        print("\n✨ [통합 완료] 모든 자치구 모델이 딕셔너리 형태로 저장되었습니다.")
 
     except Exception as e:
         print(f"❌ 오류 발생: {e}")

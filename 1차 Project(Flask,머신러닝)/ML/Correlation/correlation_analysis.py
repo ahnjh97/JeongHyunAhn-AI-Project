@@ -45,7 +45,7 @@ if __name__ == "__main__":
     plt.rcParams['font.family'] = 'Malgun Gothic'
     plt.rcParams['axes.unicode_minus'] = False
 
-    save_dir = "correlation_results"
+    save_dir = ""
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 

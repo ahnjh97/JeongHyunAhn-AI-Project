@@ -49,8 +49,14 @@ def execute_sql_file(filename):
             connection.close()
 
 if __name__ == '__main__':
-    # 학습용 테이블 생성
-    execute_sql_file("create_train_table.sql")
+    # # 학습용 테이블 생성
+    # execute_sql_file("SQL/create_train_table.sql")
+    #
+    # # 학습용 데이터 삽입
+    # execute_sql_file("SQL/insert_train_data.sql")
 
-    # 학습용 데이터 삽입
-    execute_sql_file("insert_train_data.sql")
+    # # 검색 트렌드 테이블 생성
+    # execute_sql_file("SQL/create_search_trend_table.sql")
+
+    # 검색 트렌드 -> 환자 수 VIEW 생성
+    execute_sql_file("SQL/create_st2pr_view.sql")
