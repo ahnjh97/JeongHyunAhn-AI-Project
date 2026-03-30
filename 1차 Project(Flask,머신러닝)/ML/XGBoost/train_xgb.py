@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import joblib
+import holidays
 from xgboost import XGBRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
@@ -33,6 +34,19 @@ def train_disease_xgb(df, disease_type, run_cv=False):
     all_target_cols = [col for col in df.columns if 'CNT_D' in col.upper()]
     all_prev_cols = ["COLD_PREV_D1", "COLD_PREV_D2", "COLD_PREV_D3",
                      "ASTHMA_PREV_D1", "ASTHMA_PREV_D2", "ASTHMA_PREV_D3"]
+
+    # [3-1] 한국 공휴일 및 휴일 특징 생성
+    kr_holidays = holidays.KR()
+
+    # 공휴일 여부
+    df['IS_HOLIDAY'] = df['MEASURE_DATE'].apply(lambda x: 1 if x in kr_holidays else 0)
+
+    # 주말 여부 (이미 DAY_OF_WEEK가 있지만, 이진 피처로 명시해주는 게 성능에 유리)
+    df['IS_WEEKEND'] = pd.to_datetime(df['MEASURE_DATE']).dt.dayofweek.isin([5, 6]).astype(int)
+
+    # 휴일 다음날 (환자 쏠림 현상 반영)
+    df['AFTER_HOLIDAY'] = (df['IS_HOLIDAY'].shift(1).fillna(0).astype(int) |
+                           df['IS_WEEKEND'].shift(1).fillna(0).astype(int))
 
     # 타 질병 과거치는 모델 혼선을 위해 제거
     other_disease_prev_cols = [col for col in all_prev_cols if disease_type.upper() not in col]
@@ -147,10 +161,10 @@ def main():
         print(f"🧹 전처리 완료: {len(df)}행 -> {len(df_clean)}행")
 
         # 1. 감기(COLD) 4일치 모델 학습 및 저장
-        train_disease_xgb(df_clean, 'COLD', True)
+        train_disease_xgb(df_clean, 'COLD', False)
 
         # 2. 천식(ASTHMA) 4일치 모델 학습 및 저장
-        train_disease_xgb(df_clean, 'ASTHMA', True)
+        train_disease_xgb(df_clean, 'ASTHMA', False)
 
         print("\n✨ 모든 모델 학습 및 저장 작업이 완료되었습니다!")
 
