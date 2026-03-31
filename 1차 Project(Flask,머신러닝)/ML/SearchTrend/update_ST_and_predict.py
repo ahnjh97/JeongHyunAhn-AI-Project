@@ -2,6 +2,9 @@ import requests
 import json
 import pandas as pd
 import time
+import joblib
+import numpy as np
+import holidays
 from db_config import get_conn
 from datetime import datetime, timedelta
 
@@ -126,7 +129,8 @@ def main():
             if df_cold is not None and not df_cold.empty and (pd.to_datetime(target_end) in df_cold['period'].values):
                 upsert_to_db(df_cold, table_cold)
                 found_cold = True
-                print(f"✅ 감기 데이터 수집 성공 (3일치 반영): {target_start} ~ {target_end}")
+                predict_and_upload(df_cold, 'cold')
+                print(f"✅ 감기 데이터 수집 및 예측 데이터 업데이트 성공 (3일치 반영): {target_start} ~ {target_end}")
 
         # 천식 데이터 시도
         if not found_asthma:
@@ -135,6 +139,7 @@ def main():
                     pd.to_datetime(target_end) in df_asthma['period'].values):
                 upsert_to_db(df_asthma, table_asthma)
                 found_asthma = True
+                predict_and_upload(df_asthma, 'asthma')
                 print(f"✅ 천식 데이터 수집 성공 (3일치 반영): {target_start} ~ {target_end}")
 
         if found_cold and found_asthma:
@@ -146,6 +151,109 @@ def main():
 
     if not (found_cold and found_asthma):
         print("⚠️ 일부 데이터를 최근 7일 내에서 찾지 못했습니다. API 점검이나 키워드를 확인해 보세요.")
+
+def predict_and_upload(df_result, disease_type='cold'):
+    if df_result is None or df_result.empty:
+        return
+
+    model_path = f"st2pr_{disease_type.lower()}.pkl"
+    try:
+        model = joblib.load(model_path)
+    except:
+        print(f"❌ 모델 로드 실패: {model_path}")
+        return
+
+    conn = get_conn()
+    kr_holidays = holidays.KR()
+
+    try:
+        # 1. 자치구 정보 (DB에서 CHAR(5) 문자열로 그대로 읽어옴)
+        df_dist_base = pd.read_sql("SELECT DIST_CODE, POP_TOTAL FROM LATEST_POP_STATS", conn)
+
+        # [중요] 학습 당시 DIST_CODE 카테고리 목록 (서울시 25개 구 문자열 리스트)
+        # 학습 때 사용했던 모든 구 코드가 포함되어야 합니다.
+        dist_categories = sorted(df_dist_base['DIST_CODE'].unique().tolist())
+
+        for _, row in df_result.iterrows():
+            target_date_str = row['period'].strftime('%Y-%m-%d')
+            search_idx = float(row['ratio'])
+            target_dt = pd.to_datetime(target_date_str)
+
+            df_input = df_dist_base.copy()
+            search_col_name = f"{disease_type.upper()}_SEARCH_IDX"
+            df_input[search_col_name] = search_idx
+
+            # [해결책] pd.Categorical을 사용하여 카테고리 '목록'을 학습 때와 동일하게 강제 주입
+            # 1. MONTH: 1~12까지의 범위를 가짐 (1th feature 범인 해결)
+            month_categories = pd.Index(list(range(1, 13)), dtype='int32')
+            df_input['MONTH'] = pd.Categorical([target_dt.month] * len(df_input), categories=month_categories)
+
+            # 2. DIST_CODE: DB 값(문자열) 그대로 사용하되, 학습 때의 구 코드 목록을 카테고리로 지정
+            df_input['DIST_CODE'] = pd.Categorical(df_input['DIST_CODE'], categories=dist_categories)
+
+            # 3. DAY_OF_WEEK: 0~6까지의 범위를 가짐
+            dow_categories = pd.Index(list(range(0, 7)), dtype='int32')
+            df_input['DAY_OF_WEEK'] = pd.Categorical([target_dt.dayofweek] * len(df_input), categories=dow_categories)
+
+            # 수치형 피처 (학습 때 .astype(int) 였으므로 int64 유지)
+            df_input['IS_HOLIDAY'] = np.int32(1 if target_dt in kr_holidays else 0)
+            df_input['IS_WEEKEND'] = np.int32(1 if target_dt.dayofweek in [5, 6] else 0)
+
+            # 3. 피처 순서 정렬 (학습 시 features 리스트와 완벽 일치)
+            features = [search_col_name, 'MONTH', 'DIST_CODE', 'DAY_OF_WEEK', 'IS_HOLIDAY', 'IS_WEEKEND']
+
+            # .copy()를 사용하여 독립된 데이터프레임으로 만듭니다 (중요)
+            X_test = df_input[features].copy()
+
+            # 4. 예측
+            try:
+                import xgboost as xgb
+
+                for col in ['MONTH', 'DIST_CODE', 'DAY_OF_WEEK']:
+                    X_test[col] = X_test[col].astype('category')
+
+                preds_log = model.predict(X_test)
+
+            except Exception as e:
+                # 만약 위에서도 에러가 난다면, 카테고리 기능을 잠시 우회하는 최후의 수단입니다.
+                print("⚠️ 일반 predict 실패. DMatrix 우회 시도...")
+                try:
+                    # 학습된 모델의 Booster 객체를 직접 추출
+                    booster = model.get_booster()
+                    # 추론용 DMatrix 생성
+                    dtest = xgb.DMatrix(X_test, enable_categorical=True)
+                    preds_log = booster.predict(dtest)
+                except Exception as e2:
+                    print(f"❌ 최후 수단도 실패: {e2}")
+                    # 에러 추적을 위해 X_test의 상태를 출력합니다.
+                    print(f"DEBUG - X_test dtypes:\n{X_test.dtypes}")
+                    raise e2
+
+            preds_rate = np.expm1(preds_log)
+            df_input['PRED_COUNT'] = (preds_rate * df_input['POP_TOTAL'] / 10000).round().astype(int)
+
+            # 5. DB 저장 (MERGE) - DIST_CODE는 다시 원래 문자열로 저장
+            cursor = conn.cursor()
+            upsert_rows = [
+                (target_date_str, str(r['DIST_CODE']), int(r['PRED_COUNT']))
+                for _, r in df_input.iterrows()
+            ]
+
+            merge_sql = """
+                MERGE INTO PRED_PATIENT_CNT t
+                USING (SELECT TO_DATE(:1, 'YYYY-MM-DD') as m_date, :2 as d_code, :3 as p_cnt FROM dual) s
+                ON (t.measure_date = s.m_date AND t.district_code = s.d_code)
+                WHEN MATCHED THEN UPDATE SET t.pred_count = s.p_cnt
+                WHEN NOT MATCHED THEN INSERT (measure_date, district_code, pred_count) VALUES (s.m_date, s.d_code, s.p_cnt)
+            """
+            cursor.executemany(merge_sql, upsert_rows)
+            conn.commit()
+            cursor.close()
+
+        print(f"✅ {disease_type.upper()} 예측 및 적재 완료!")
+
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     main()

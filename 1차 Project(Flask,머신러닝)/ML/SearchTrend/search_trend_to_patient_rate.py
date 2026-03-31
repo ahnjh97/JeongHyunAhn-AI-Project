@@ -6,7 +6,7 @@ import joblib
 import holidays
 from db_config import get_conn
 
-def train_st2pr_model(disease_type='COLD'):
+def train_st2pr_model(disease_type='COLD', train_end_date='2024-12-31'):
     """
     네이버 검색 지수를 기반으로 가상 환자 발생 비율(Rate)을 추측하는 모델
     """
