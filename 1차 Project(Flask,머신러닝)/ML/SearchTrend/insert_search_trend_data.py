@@ -24,7 +24,6 @@ def get_api_response(start, end, unit, group_name, keywords):
         return pd.DataFrame(res.json()['results'][0]['data'])
     return None
 
-
 def get_scaled_daily_data(group_name, keywords):
     print(f"📏 {group_name} 전체 기준점(주 단위) 수집 중...")
     # 1. 전체 기간 주 단위 수집 (11년 치도 주 단위는 한 번에 가능)
@@ -73,9 +72,14 @@ def upload_to_db(df, table_name):
         conn.close()
 
 def main():
-    upload_to_db(get_scaled_daily_data("cold", ["감기", "목감기", "코감기"]), "SEARCH_TREND_COLD")
-    upload_to_db(get_scaled_daily_data("asthma", ["천식", "벤토린", "네블라이저"]), "SEARCH_TREND_ASTHMA")
+    keywords_cold = ["감기", "목감기", "코감기"]
+    keywords_asthma = ["천식", "벤토린", "네블라이저"]
+    table_cold = "SEARCH_TREND_COLD"
+    table_asthma = "SEARCH_TREND_ASTHMA"
 
+    # ST2PR 모델 학습용 데이터 삽입
+    upload_to_db(get_scaled_daily_data("cold", keywords_cold), table_cold)
+    upload_to_db(get_scaled_daily_data("asthma", keywords_asthma), table_asthma)
 
 if __name__ == "__main__":
     main()
