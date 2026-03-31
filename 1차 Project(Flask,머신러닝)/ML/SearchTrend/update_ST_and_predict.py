@@ -168,10 +168,7 @@ def predict_and_upload(df_result, disease_type='cold'):
 
     try:
         # 1. 자치구 정보 (DB에서 CHAR(5) 문자열로 그대로 읽어옴)
-        df_dist_base = pd.read_sql("SELECT DIST_CODE, POP_TOTAL FROM LATEST_POP_STATS", conn)
-
-        # [중요] 학습 당시 DIST_CODE 카테고리 목록 (서울시 25개 구 문자열 리스트)
-        # 학습 때 사용했던 모든 구 코드가 포함되어야 합니다.
+        df_dist_base = pd.read_sql("SELECT DIST_CODE FROM DISTRICT_CODE", conn)
         dist_categories = sorted(df_dist_base['DIST_CODE'].unique().tolist())
 
         for _, row in df_result.iterrows():
@@ -206,45 +203,24 @@ def predict_and_upload(df_result, disease_type='cold'):
             X_test = df_input[features].copy()
 
             # 4. 예측
-            try:
-                import xgboost as xgb
-
-                for col in ['MONTH', 'DIST_CODE', 'DAY_OF_WEEK']:
-                    X_test[col] = X_test[col].astype('category')
-
-                preds_log = model.predict(X_test)
-
-            except Exception as e:
-                # 만약 위에서도 에러가 난다면, 카테고리 기능을 잠시 우회하는 최후의 수단입니다.
-                print("⚠️ 일반 predict 실패. DMatrix 우회 시도...")
-                try:
-                    # 학습된 모델의 Booster 객체를 직접 추출
-                    booster = model.get_booster()
-                    # 추론용 DMatrix 생성
-                    dtest = xgb.DMatrix(X_test, enable_categorical=True)
-                    preds_log = booster.predict(dtest)
-                except Exception as e2:
-                    print(f"❌ 최후 수단도 실패: {e2}")
-                    # 에러 추적을 위해 X_test의 상태를 출력합니다.
-                    print(f"DEBUG - X_test dtypes:\n{X_test.dtypes}")
-                    raise e2
-
-            preds_rate = np.expm1(preds_log)
-            df_input['PRED_COUNT'] = (preds_rate * df_input['POP_TOTAL'] / 10000).round().astype(int)
+            preds_log = model.predict(X_test)
+            df_input['PRED_RATE'] = np.expm1(preds_log)
 
             # 5. DB 저장 (MERGE) - DIST_CODE는 다시 원래 문자열로 저장
             cursor = conn.cursor()
             upsert_rows = [
-                (target_date_str, str(r['DIST_CODE']), int(r['PRED_COUNT']))
+                (target_date_str, str(r['DIST_CODE']), float(r['PRED_RATE']))
                 for _, r in df_input.iterrows()
             ]
 
-            merge_sql = """
-                MERGE INTO PRED_PATIENT_CNT t
-                USING (SELECT TO_DATE(:1, 'YYYY-MM-DD') as m_date, :2 as d_code, :3 as p_cnt FROM dual) s
+            merge_sql = f"""
+                MERGE INTO PRED_PATIENT_RATE_{disease_type.upper()} t
+                USING (SELECT TO_DATE(:1, 'YYYY-MM-DD') as m_date, :2 as d_code, :3 as p_rate FROM dual) s
                 ON (t.measure_date = s.m_date AND t.district_code = s.d_code)
-                WHEN MATCHED THEN UPDATE SET t.pred_count = s.p_cnt
-                WHEN NOT MATCHED THEN INSERT (measure_date, district_code, pred_count) VALUES (s.m_date, s.d_code, s.p_cnt)
+                WHEN MATCHED THEN 
+                    UPDATE SET t.pred_rate = s.p_rate
+                WHEN NOT MATCHED THEN 
+                    INSERT (measure_date, district_code, pred_rate) VALUES (s.m_date, s.d_code, s.p_rate)
             """
             cursor.executemany(merge_sql, upsert_rows)
             conn.commit()

@@ -12,6 +12,9 @@
     {% if 'auth' in request.endpoint %}
     <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
     {% endif %}
+    {% if 'service' in request.endpoint %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='service.css') }}">
+    {% endif %}
 
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 

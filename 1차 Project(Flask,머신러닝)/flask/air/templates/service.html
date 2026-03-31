@@ -1,8 +1,168 @@
 {% extends 'base.html' %}
 {% block content %}
-
 <div class="main-visual-section px-3">
+    <div class="container-fluid">
+        <div class="row g-4">
 
+            <div class="col-12 order-1">
+                <div class="row g-2 mb-2 text-center">
+                    <div class="col"><div class="card p-2 py-3 summary-card-item"><small class="text-muted">미세먼지</small><span class="summary-val">75</span></div></div>
+                    <div class="col"><div class="card p-2 py-3 summary-card-item"><small class="text-muted">오늘 예측</small><span class="summary-val status-mid">145명</span></div></div>
+                    <div class="col"><div class="card p-2 py-3 summary-card-item"><small class="text-muted">내일 예측</small><span class="summary-val status-high">167명</span></div></div>
+                    <div class="col"><div class="card p-2 py-3 summary-card-item"><small class="text-muted">모레 예측</small><span class="summary-val status-high">182명</span></div></div>
+                    <div class="col"><div class="card p-2 py-3 summary-card-item"><small class="text-muted">3일 후</small><span class="summary-val status-very-high">195명</span></div></div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6 order-2 order-lg-2">
+                <div class="card p-3 h-100">
+                    <h6 class="card-title text-center mb-3">서울시 구별 예측 환자 수 위험도</h6>
+                    <div id="map" style="width:100%; height: 450px !important; border-radius: 12px;"></div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-3 order-3 order-lg-3">
+                <div class="card p-4 h-100">
+                    <h6 class="card-title">⏰ 시차 반영 체감형 지표</h6>
+                    <div id="risk-progress-section">
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span class="fw-bold">오늘</span><span class="status-mid fw-bold">보통 (45%)</span>
+                            </div>
+                            <div class="progress" style="height: 10px;"><div class="progress-bar bg-warning" style="width: 45%"></div></div>
+                        </div>
+                        </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-3 order-4 order-lg-1">
+                <div class="card p-4 mb-4">
+                    <h6 class="card-title">📈 자치구별 환자 수 예측</h6>
+                    <div style="height: 220px;">
+                        <canvas id="forecastChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card p-4 rule-card">
+                    <h6 class="card-title border-0 mb-3">🛡️ 고위험군 행동 수칙</h6>
+                    <div class="small lh-lg">
+                        <div class="d-flex mb-2"><span>⚠️</span><span class="ms-2">호흡기 질환자 및 노약자는 외출 자제</span></div>
+                        <div class="d-flex mb-2"><span>😷</span><span class="ms-2">외출 시 반드시 마스크 착용 필수</span></div>
+                        <div class="d-flex"><span>💧</span><span class="ms-2">충분한 수분 섭취 및 실내 환기 유의</span></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
+{% endblock %}
 
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    const chartDom = document.getElementById('map');
+    const myChart = echarts.init(chartDom);
+    const rawData = {{ map_data | tojson | safe if map_data else '[]' }};
+
+    $.getJSON("/api/seoul-geo", function(geoJson) {
+        echarts.registerMap('seoul', geoJson);
+
+        const option = {
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c}명'
+            },
+            visualMap: {
+                min: 0,
+                max: 200,
+                show: true,
+                right: '0%',
+                bottom: '0%',
+                inRange: {
+                    color: ['#ffffff', '#fee2e2', '#f87171', '#ef4444', '#991b1b'] // 흰색 -> 빨강
+                }
+            },
+            series: [
+                {
+                    name: '서울시 위험도',
+                    type: 'map',
+                    map: 'seoul',
+                    roam: false,
+                    nameProperty: 'SIG_KOR_NM',
+
+                    layoutCenter: ['48%', '50%'],
+                    layoutSize: '135%',
+
+                    aspectScale: 0.9, // 서울 모양이 너무 눌리지 않게 미세 조정
+
+                    // [해결 1] 클릭 시 잔상이 남지 않도록 선택 모드 완전 차단
+                    selectedMode: false,
+
+                    label: {
+                        show: true,
+                        color: '#64748b',
+                        fontWeight: '600',
+                        fontSize: 13.5,
+                        textBorderColor: '#fff',
+                        textBorderWidth: 1
+                    },
+
+                    itemStyle: {
+                        areaColor: '#ffffff',
+                        borderColor: '#cbd5e0',
+                        borderWidth: 1
+                    },
+
+                    // [해결 2] 마우스 올렸을 때 설정
+                    emphasis: {
+                        focus: 'self',
+                        label: {
+                            show: true,
+                            color: '#000',
+                            fontSize: 15.5,
+                            fontWeight: '900',
+                            textBorderColor: '#fff',
+                            textBorderWidth: 4
+                        },
+                        itemStyle: {
+                            // [핵심] areaColor를 null로 설정해야 노란색으로 변하지 않고
+                            // visualMap에서 지정한 데이터 색상이 그대로 유지됩니다.
+                            areaColor: null,
+                            borderColor: '#4f46e5', // 테두리만 인디고 블루로 변경
+                            borderWidth: 3,
+                            shadowBlur: 0, // 잔상의 원인이 될 수 있는 그림자 제거
+                        }
+                    },
+
+                    // [해결 3] 마우스가 떠난 뒤 즉시 원래 상태로 복구 (투명도 유지)
+                    blur: {
+                        itemStyle: {
+                            opacity: 1 // 다른 구들도 흐려지지 않게 1로 고정하여 잔상 느낌 제거
+                        },
+                        label: {
+                            opacity: 1
+                        }
+                    },
+
+                    data: rawData.map(item => ({
+                        name: item.name,
+                        value: item.rate
+                    }))
+                }
+            ]
+        };
+
+        // [해결 4] setOption의 true 옵션으로 이전 설정 찌꺼기 완전 삭제
+        myChart.setOption(option, true);
+    });
+
+    window.addEventListener('resize', function() {
+        myChart.resize();
+    });
+});
+</script>
 {% endblock %}

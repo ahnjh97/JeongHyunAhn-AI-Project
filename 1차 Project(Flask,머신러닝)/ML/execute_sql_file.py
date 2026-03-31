@@ -62,4 +62,4 @@ if __name__ == '__main__':
     # execute_sql_file("SQL/create_st2pr_view.sql")
 
     # 실시간 서비스용 예측 환자 수 테이블 생성
-    execute_sql_file("SQL/create_pred_patient_cnt.sql")
+    execute_sql_file("SQL/create_pred_patient_rate.sql")
