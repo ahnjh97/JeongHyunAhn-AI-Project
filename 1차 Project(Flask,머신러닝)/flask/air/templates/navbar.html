@@ -1,10 +1,27 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
-    <div class="container">
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+    <div class="container-fluid px-lg-4">
         <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
                 <img src="{{ url_for('static', filename='images/logo.png') }}"
                      alt="Logo" width="48" height="48" class="d-inline-block align-text-top me-2">
                 <span class="fw-bold h2 mb-0 align-left text-dark" style="letter-spacing: -1px;">AIR</span>
         </a>
+
+        {% if is_service_page %}
+        <div class="ms-2 d-flex align-items-center">
+            <div class="dropdown">
+                <button class="btn btn-primary btn-sm dropdown-toggle fw-bold px-3 py-2"
+                        type="button"
+                        id="districtSelect"
+                        data-bs-toggle="dropdown"
+                        style="border-radius: 20px; font-size: 1.2rem; min-width: 110px; border: none;">
+                    강남구
+                </button>
+                <ul class="dropdown-menu shadow border-0" id="districtMenu"
+                    style="max-height: 400px; overflow-y: auto; border-radius: 12px; font-size: 0.9rem;">
+                    </ul>
+            </div>
+        </div>
+        {% endif %}
 
         <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>

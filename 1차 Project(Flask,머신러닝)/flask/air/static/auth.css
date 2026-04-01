@@ -35,23 +35,28 @@ body {
 
 /* 화면 전체 중앙 정렬 설정 */
 body, html {
-    height: 100%;
     margin: 0;
+    padding: 0;
+    min-height: 100vh; /* 최소 화면 높이 확보 */
+}
+
+body {
+    display: flex;
+    flex-direction: column; /* 네비바와 컨텐츠를 세로로 배치 */
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
 }
 
 .auth-container {
     /* 1. 위치 방식 수정: absolute 유지하되 top 비율 제거 */
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%); /* 가로 중앙만 정렬 */
-
-    /* 2. 상단 여백 확보: 50% 대신 고정값이나 vh 사용 */
-    top: 100px; /* 화면 최상단에서 50px 지점부터 시작 (스텝 인디케이터 공간) */
-
-    /* 3. 박스 크기 및 스타일 (기존 유지) */
+    position: relative;
+    left: auto;
+    transform: none;
+    top: auto;
     width: 100%;
     max-width: 450px;
-    padding: 40px;
+    margin-top: 10px; /* 하단에 50px 여백을 추가하여 바닥에 붙지 않게 함 */
+    margin-bottom: 15px; /* 하단에 50px 여백을 추가하여 바닥에 붙지 않게 함 */
+    padding: 50px;
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -457,7 +462,7 @@ input:-webkit-autofill:active {
     height: 20px;          /* 고정 높이 설정 */
     min-height: 20px;
     margin-top: 0px;       /* 위쪽 입력창과의 간격 */
-    margin-bottom: 10px;    /* 아래쪽 라벨과의 간격 (필요에 따라 조절) */
+    margin-bottom: 0px;    /* 아래쪽 라벨과의 간격 (필요에 따라 조절) */
     display: flex;
     align-items: center;   /* 텍스트 수직 중앙 정렬 */
     overflow: hidden;      /* 텍스트가 넘쳐도 레이아웃 파괴 방지 */
