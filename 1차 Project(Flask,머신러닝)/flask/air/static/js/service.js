@@ -20,7 +20,7 @@ $(document).ready(function() {
         });
     }
 
-    // 4. 지도 렌더링 함수 (스타일 보존)
+    // 4. 지도 렌더링 함수
     function renderMap(mapData, statusLabel, mapMin, mapMax) {
         if (seoulGeoJson) {
             drawChart(mapData, statusLabel);
@@ -33,9 +33,6 @@ $(document).ready(function() {
         }
 
         function drawChart(data, label) {
-            const districtData = data.find(item => item.name === currentDistrict);
-            const patientDisplay = (districtData && districtData.cnt) ? districtData.cnt : 0;
-
             const option = {
                 backgroundColor: 'transparent',
                 tooltip: {
@@ -46,7 +43,7 @@ $(document).ready(function() {
                             return `<div style="font-family: Pretendard; padding: 5px;">
                                         <b style="font-size: 14px;">${params.name}</b><br/>
                                         <span style="color: #4f46e5;">예측 환자: <b>${params.data.cnt}</b>명</span><br/>
-                                        <small>발생률: ${params.data.realRate.toFixed(2)} (1만명 당)</small><br/>
+                                        <small>발생률: ${params.data.realRate.toFixed(2)}</small><br/>
                                         <small style="color: #ef4444;">위험지수: 평균의 ${riskPercent}%</small>
                                     </div>`;
                         }
@@ -73,7 +70,7 @@ $(document).ready(function() {
                     right: 4, top: 4, z: 100,
                     silent: true,
                     style: {
-                        text: `예측 환자 : ${patientDisplay}명`,
+                        text: `선택된 구 : ${currentDistrict}`,
                         font: 'bold 18px Pretendard',
                         fill: '#1e293b',
                         textAlign: 'right',
@@ -98,50 +95,59 @@ $(document).ready(function() {
                     },
                     itemStyle: { areaColor: '#ffffff', borderColor: '#cbd5e0', borderWidth: 1 },
                     emphasis: {
-                        label: { show: true, fontWeight: '900', color: '#000000', fontFamily: 'Pretendard' },
-                        itemStyle: { areaColor: null, borderColor: '#4f46e5', borderWidth: 2 }
+                        label: { show: true, fontWeight: '900', color: '#000000' },
+                        itemStyle: {
+                            areaColor: null,
+                            borderColor: '#4f46e5',
+                            borderWidth: 4
+                        }
                     },
-                    data: data.sort((a, b) => (a.name === currentDistrict ? 1 : -1)).map(item => ({
-                        name: item.name,
-                        value: item.value,
-                        realRate: item.realRate,
-                        cnt: item.cnt,
-                        itemStyle: item.name === currentDistrict ? {
-                            borderColor: '#4f46e5', borderWidth: 4, z: 10
-                        } : {}
-                    }))
+                    data: data.map(item => {
+                        const isSelected = item.name === currentDistrict;
+                        return {
+                            name: item.name,
+                            value: item.value,
+                            realRate: item.realRate,
+                            cnt: item.cnt,
+                            // [수정 핵심] zlevel을 다르게 주어 선택된 구만 별도의 레이어로 분리 (간섭 완전 차단)
+                            zlevel: isSelected ? 1 : 0,
+                            z: isSelected ? 5 : 1,
+                            itemStyle: isSelected ? {
+                                borderColor: '#4f46e5',
+                                borderWidth: 4,
+                                borderType: 'solid'
+                            } : {
+                                borderColor: '#cbd5e0',
+                                borderWidth: 1
+                            }
+                        };
+                    })
                 }]
             };
-
             mapChart.setOption(option, true);
         }
     }
 
-    // 5. [추가] 데이터 연동 핵심 로직
+    // 5. 데이터 연동 로직
     function updateDisplay() {
         if (typeof rawData === 'undefined' || !rawData) return;
-
         const diseaseKey = currentModel === 'cold' ? '감기' : '천식';
         const seoulAvg = currentModel === 'cold' ? 62.44 : 3.6;
 
-        // 구 이름 텍스트 변경
         $('#districtSelect').text(currentDistrict);
         $('#dynamicTitle').text(`서울시 자치구별 ${diseaseKey} 위험도`);
 
-        // [상단 카드 연동] 선택된 구의 4일치 데이터 반영
         $('.summary-val').each(function(index) {
-            if (index === 0) return; // 미세먼지(첫번째 카드)는 패스
-            const dayIdx = index - 1; // 오늘(0), 내일(1), 모레(2), 3일후(3)
+            if (index === 0) return;
+            const dayIdx = index - 1;
             const dayData = rawData[diseaseKey][dayIdx][currentDistrict];
             if (dayData) {
                 $(this).text(`${dayData.pred_cnt}명`);
             }
         });
 
-        // [선 그래프 연동]
         updateLineCharts();
 
-        // [우측 지표 연동]
         const todayInfo = rawData[diseaseKey][currentDateIndex][currentDistrict];
         if (todayInfo) {
             const riskRatio = (todayInfo.pred_rate / seoulAvg) * 100;
@@ -159,7 +165,6 @@ $(document).ready(function() {
             `);
         }
 
-        // [지도 데이터 계산]
         const targetObj = rawData[diseaseKey][currentDateIndex];
         const filteredData = Object.entries(targetObj).map(([distName, details]) => ({
             name: distName,
@@ -169,11 +174,7 @@ $(document).ready(function() {
         }));
 
         const values = filteredData.map(d => d.value);
-        const minVal = Math.min(...values), maxVal = Math.max(...values);
-        const mapMin = minVal, mapMax = maxVal;
-
-        const dateLabels = ['오늘', '내일', '모레', '3일 후'];
-        renderMap(filteredData, `${diseaseKey} | ${dateLabels[currentDateIndex]}`, mapMin, mapMax);
+        renderMap(filteredData, `${diseaseKey} 위험도`, Math.min(...values), Math.max(...values));
     }
 
     function updateLineCharts() {
@@ -188,7 +189,8 @@ $(document).ready(function() {
         updateDisplay();
     });
 
-    $(document).on('click', '.district-option', function() {
+    $(document).on('click', '.district-option', function(e) {
+        e.preventDefault();
         currentDistrict = $(this).text().trim();
         updateDisplay();
     });
@@ -208,7 +210,7 @@ $(document).ready(function() {
     function createStepOption(title, mainColor) {
         return {
             grid: { top: '15%', left: '5%', right: '10%', bottom: '15%', containLabel: true },
-            tooltip: { trigger: 'axis', textStyle: { fontFamily: 'Pretendard' } },
+            tooltip: { trigger: 'axis' },
             xAxis: {
                 type: 'category', boundaryGap: false,
                 data: ['3일전', '2일전', '1일전', '오늘', '내일', '모레', '글피'],
