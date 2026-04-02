@@ -1,6 +1,7 @@
 from air.db_config import get_conn
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from ..ml import update_ST_and_predict, final_output
+from flask import current_app
 
 # 서브모델 출력 데이터가 DB에 존재하는지 확인
 def check_sub_model_data(disease_type):
@@ -122,3 +123,43 @@ def fetch_prediction_from_db(d_type, day):
     except Exception as e:
         print(f"❌ DB 수집 중 오류 발생 ({d_type}, {day}일차): {e}")
         return {}
+
+def get_past_data():
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    # [3일전, 2일전, 1일전] 순서로 날짜 리스트 생성 (차트의 왼쪽부터 그려야 하므로)
+    today = datetime.now().date()
+    past_dates = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in [3, 2, 1]]
+
+    past_results = {'감기': [], '천식': []}
+
+    for disease in ['COLD', 'ASTHMA']:
+        disease_kor = '감기' if disease == 'COLD' else '천식'
+
+        for d_str in past_dates:
+            sql = f"""
+                SELECT DISTRICT_CODE, PRED_RATE, PRED_CNT 
+                FROM PRED_PATIENT_RATE_{disease} 
+                WHERE MEASURE_DATE = TO_DATE(:1, 'YYYY-MM-DD')
+            """
+            cursor.execute(sql, [d_str])
+            rows = cursor.fetchall()
+
+            day_map = {}
+            for r in rows:
+                # DIST_DATA는 전역 혹은 app에 등록된 구 코드 매핑 정보
+                # 예: 11110 -> "종로구"
+                dist_code = int(r[0])
+                dist_name = current_app.DIST_DATA.get(dist_code, (None,))[0]
+
+                if dist_name:
+                    day_map[dist_name] = {
+                        'pred_rate': float(r[1]),
+                        'pred_cnt': int(r[2])
+                    }
+            past_results[disease_kor].append(day_map)
+
+    cursor.close()
+    conn.close()
+    return past_results

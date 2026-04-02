@@ -7,7 +7,7 @@ $(document).ready(function() {
     // 2. 상태 관리 변수
     let currentDistrict = "강남구";
     let currentModel = 'cold';
-    let currentDateIndex = 0;
+    let currentDateIndex = 3; // 오늘 인덱스
     let seoulGeoJson = null;
 
     // 3. Navbar 드롭다운 메뉴 채우기
@@ -89,17 +89,17 @@ $(document).ready(function() {
                             return params.name === currentDistrict ? `{s|${params.name}}` : params.name;
                         },
                         rich: {
-                            s: { fontSize: 18, fontWeight: '900', color: '#000', textBorderColor: '#fff', textBorderWidth: 3, fontFamily: 'Pretendard' }
+                            s: { fontSize: 18, fontWeight: '900', color: '#1e293b', textBorderColor: '#fff', textBorderWidth: 3, fontFamily: 'Pretendard' }
                         },
                         color: '#64748b', fontWeight: '600', fontSize: 13, fontFamily: 'Pretendard'
                     },
-                    itemStyle: { areaColor: '#ffffff', borderColor: '#cbd5e0', borderWidth: 1 },
+                    itemStyle: { areaColor: '#ffffff', borderColor: '#cbd5e0', borderWidth: 0.5 },
                     emphasis: {
                         label: { show: true, fontWeight: '900', color: '#000000' },
                         itemStyle: {
                             areaColor: null,
-                            borderColor: '#4f46e5',
-                            borderWidth: 4
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(0, 0, 0, 0.3)'
                         }
                     },
                     data: data.map(item => {
@@ -109,16 +109,18 @@ $(document).ready(function() {
                             value: item.value,
                             realRate: item.realRate,
                             cnt: item.cnt,
-                            // [수정 핵심] zlevel을 다르게 주어 선택된 구만 별도의 레이어로 분리 (간섭 완전 차단)
                             zlevel: isSelected ? 1 : 0,
                             z: isSelected ? 5 : 1,
                             itemStyle: isSelected ? {
-                                borderColor: '#4f46e5',
-                                borderWidth: 4,
-                                borderType: 'solid'
+                                // 테두리 대신 강력한 그림자 효과로 입체감 부여
+                                shadowBlur: 20,
+                                shadowColor: 'rgba(0, 0, 0, 0.4)',
+                                shadowOffsetX: 0,
+                                shadowOffsetY: 0,
+                                areaColor: null // 원본 색상 유지
                             } : {
-                                borderColor: '#cbd5e0',
-                                borderWidth: 1
+                                shadowBlur: 0,
+                                borderWidth: 0.5
                             }
                         };
                     })
@@ -148,7 +150,7 @@ $(document).ready(function() {
 
         updateLineCharts();
 
-        const todayInfo = rawData[diseaseKey][currentDateIndex][currentDistrict];
+        const todayInfo = rawData[diseaseKey][currentDateIndex - 3][currentDistrict];
         if (todayInfo) {
             const riskRatio = (todayInfo.pred_rate / seoulAvg) * 100;
             const level = riskRatio > 120 ? '위험' : riskRatio > 90 ? '보통' : '안전';
@@ -165,7 +167,7 @@ $(document).ready(function() {
             `);
         }
 
-        const targetObj = rawData[diseaseKey][currentDateIndex];
+        const targetObj = rawData[diseaseKey][currentDateIndex - 3];
         const filteredData = Object.entries(targetObj).map(([distName, details]) => ({
             name: distName,
             value: details.pred_rate / seoulAvg,
@@ -178,9 +180,23 @@ $(document).ready(function() {
     }
 
     function updateLineCharts() {
-        const getSeries = (disease) => [0, 1, 2, 3].map(i => (rawData[disease][i][currentDistrict]?.pred_cnt || 0));
-        coldChart.setOption({ series: [{ data: [120, 130, 115].concat(getSeries('감기')) }] });
-        asthmaChart.setOption({ series: [{ data: [90, 85, 95].concat(getSeries('천식')) }] });
+        // 1. 감기 데이터 추출 및 업데이트
+        const prevCold = [0, 1, 2].map(i => prevData['감기'][i][currentDistrict]?.pred_cnt || 0);
+        const nextCold = [0, 1, 2, 3].map(i => rawData['감기'][i][currentDistrict]?.pred_cnt || 0);
+        const coldFullData = prevCold.concat(nextCold);
+
+        coldChart.setOption({
+            series: [{ data: coldFullData }]
+        });
+
+        // 2. 천식 데이터 추출 및 업데이트
+        const prevAsthma = [0, 1, 2].map(i => prevData['천식'][i][currentDistrict]?.pred_cnt || 0);
+        const nextAsthma = [0, 1, 2, 3].map(i => rawData['천식'][i][currentDistrict]?.pred_cnt || 0);
+        const asthmaFullData = prevAsthma.concat(nextAsthma);
+
+        asthmaChart.setOption({
+            series: [{ data: asthmaFullData }]
+        });
     }
 
     // 6. 이벤트 리스너
@@ -207,19 +223,40 @@ $(document).ready(function() {
         updateDisplay();
     });
 
+    // 7. 차트 기본 옵션 생성 (Smooth Line & Area Style 적용)
     function createStepOption(title, mainColor) {
         return {
             grid: { top: '15%', left: '5%', right: '10%', bottom: '15%', containLabel: true },
-            tooltip: { trigger: 'axis' },
-            xAxis: {
-                type: 'category', boundaryGap: false,
-                data: ['3일전', '2일전', '1일전', '오늘', '내일', '모레', '글피'],
-                axisLabel: { fontSize: 10, fontFamily: 'Pretendard' }
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'none' }
             },
-            yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed' } } },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: ['3일전', '2일전', '1일전', '오늘', '내일', '모레', '글피'],
+                axisLabel: { fontSize: 10, fontFamily: 'Pretendard', color: '#64748b' },
+                axisLine: { lineStyle: { color: '#e2e8f0' } }
+            },
+            yAxis: {
+                type: 'value',
+                splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } },
+                axisLabel: { fontSize: 10, fontFamily: 'Pretendard', color: '#64748b' }
+            },
             series: [{
-                name: title, type: 'line', step: 'start', symbol: 'circle', symbolSize: 6,
-                itemStyle: { color: mainColor }, lineStyle: { width: 2, color: mainColor }
+                name: title,
+                type: 'line',
+                smooth: true, // 곡선 적용
+                symbol: 'circle',
+                symbolSize: 8,
+                itemStyle: { color: mainColor, borderColor: '#fff', borderWidth: 2 },
+                lineStyle: { width: 3, color: mainColor },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: mainColor + '44' }, // 상단 투명도
+                        { offset: 1, color: mainColor + '00' }  // 하단 투명도
+                    ])
+                }
             }]
         };
     }

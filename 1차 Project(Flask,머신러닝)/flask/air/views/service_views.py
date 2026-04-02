@@ -1,7 +1,7 @@
 import json
 import os
 from flask import Blueprint, url_for, render_template, jsonify, current_app, make_response, request
-from air.utils.model_utils import get_or_create_prediction
+from air.utils.model_utils import get_or_create_prediction, get_past_data
 
 bp = Blueprint('service', __name__, url_prefix='/service')
 
@@ -30,12 +30,18 @@ def service():
         # 1. 마스터 함수 호출 (25개 구 x 4일치 x 2종 질병 데이터 뭉치)
         prediction_data = get_or_create_prediction()
 
+        past_data = get_past_data()
+
         # 2. JS에서 바로 쓸 수 있게 JSON 문자열로 변환
         map_data_json = json.dumps(prediction_data, ensure_ascii=False)
+        chart_data_json = json.dumps(past_data, ensure_ascii=False)
+
     except Exception as e:
         print(f"❌ 데이터 로드 실패: {e}")
         map_data_json = json.dumps({})
+        chart_data_json = json.dumps({})
 
     return render_template('service.html',
                            is_service_page=True,
-                           map_data=map_data_json)
+                           map_data=map_data_json,
+                           chart_data=chart_data_json)

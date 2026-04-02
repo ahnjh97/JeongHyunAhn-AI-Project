@@ -4,6 +4,7 @@ from xgboost import XGBRegressor
 from sklearn.metrics import r2_score
 import joblib
 import holidays
+import os
 from db_config import get_conn
 
 def train_st2pr_model(disease_type='COLD', train_end_date='2024-12-31'):
@@ -87,12 +88,14 @@ def train_st2pr_model(disease_type='COLD', train_end_date='2024-12-31'):
     y_pred = model.predict(X_test)
     r2 = r2_score(y_test, y_pred)
 
-    print(f"✅ ST2PR 모델 학습 완료 | R2 Score: {r2:.4f}")
+    # 저장할 경로 설정 (현재 폴더에서 flask 쪽으로 거슬러 올라감)
+    save_path = f"../../flask/air/models/st2pr_{disease_type.lower()}.pkl"
+    # 폴더가 없으면 미리 생성 (에러 방지)
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-    # 6. 모델 저장 (Flask 서비스에서 호출용)
-    model_name = f'st2pr_{disease_type.lower()}.pkl'
-    joblib.dump(model, model_name)
-    print(f"💾 모델 저장 완료: {model_name}")
+    print(f"✅ ST2PR 모델 학습 완료 | R2 Score: {r2:.4f}")
+    joblib.dump(model, save_path)
+    print(f"💾 모델 저장 완료: {save_path}")
 
     import matplotlib.pyplot as plt
 

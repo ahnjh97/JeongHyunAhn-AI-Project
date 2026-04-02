@@ -87,11 +87,8 @@
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <script>
     // 텍스트로 넘어온 데이터를 실제 JS 객체로 변환 (JSON.parse 추가)
-    // 따옴표로 감싸서 문자열로 만든 뒤 파싱하는 것이 가장 안전합니다.
     const rawData = JSON.parse('{{ map_data | safe }}');
-
-    console.log("Type of rawData:", typeof rawData); // object여야 함
-    console.log("Is Index 0 an Array?:", Array.isArray(rawData['감기']['0'])); // true여야 함
+    const prevData = JSON.parse('{{ chart_data | safe }}');   // 과거 데이터 (3일)
 </script>
 <script src="{{ url_for('static', filename='js/service.js') }}"></script>
 {% endblock %}
