@@ -20,7 +20,7 @@ $(document).ready(function() {
         });
     }
 
-    // 4. 지도 렌더링 함수
+    // 4. 지도 렌더링 함수 (스타일 보존)
     function renderMap(mapData, statusLabel, mapMin, mapMax) {
         if (seoulGeoJson) {
             drawChart(mapData, statusLabel);
@@ -42,7 +42,6 @@ $(document).ready(function() {
                     trigger: 'item',
                     formatter: function(params) {
                         if (params.data) {
-                            // [수정] 상대 지수(value)를 백분율로 표시하여 위험도 체감 강조
                             const riskPercent = (params.data.value * 100).toFixed(1);
                             return `<div style="font-family: Pretendard; padding: 5px;">
                                         <b style="font-size: 14px;">${params.name}</b><br/>
@@ -52,20 +51,11 @@ $(document).ready(function() {
                                     </div>`;
                         }
                         return params.name;
-                    },
-                    transitionDuration: 0,
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    borderWidth: 0,
-                    shadowBlur: 10,
-                    shadowColor: 'rgba(0, 0, 0, 0.1)',
-                    textStyle: { color: '#1e293b', fontFamily: 'Pretendard' }
+                    }
                 },
                 visualMap: {
-                    // [수정] 절대 수치가 아닌 '상대 지수(Ratio)' 기준으로 척도 설정
-                    // 1.0(평균)을 중심으로 0.8(낮음) ~ 1.5(높음) 범위를 강조
-                    // 천식의 경우 8.0(평균 3.6의 약 2.2배)이 들어오면 아주 진한 색이 됩니다.
                     min: mapMin || 0.8,
-                    max: mapMax || currentModel === 'cold' ? 1.3 : 2.0,
+                    max: mapMax || (currentModel === 'cold' ? 1.3 : 2.0),
                     show: true,
                     right: 0, bottom: 0,
                     itemWidth: 20, itemHeight: 120,
@@ -96,7 +86,6 @@ $(document).ready(function() {
                     nameProperty: 'SIG_KOR_NM',
                     layoutCenter: ['50%', '50%'], layoutSize: '130%',
                     aspectScale: 0.9, selectedMode: false,
-                    animationDurationUpdate: 300,
                     label: {
                         show: true,
                         formatter: function(params) {
@@ -110,92 +99,97 @@ $(document).ready(function() {
                     itemStyle: { areaColor: '#ffffff', borderColor: '#cbd5e0', borderWidth: 1 },
                     emphasis: {
                         label: { show: true, fontWeight: '900', color: '#000000', fontFamily: 'Pretendard' },
-                        itemStyle: { areaColor: null, borderColor: '#4f46e5', borderWidth: 2 , z: 5 }
+                        itemStyle: { areaColor: null, borderColor: '#4f46e5', borderWidth: 2 }
                     },
-                    data: data.map(item => ({
+                    data: data.sort((a, b) => (a.name === currentDistrict ? 1 : -1)).map(item => ({
                         name: item.name,
-                        value: item.value, // [수정] 색상 결정은 riskIndex(상대지수) 기준
-                        realRate: item.realRate, // 툴팁용 실제값 보존
+                        value: item.value,
+                        realRate: item.realRate,
                         cnt: item.cnt,
                         itemStyle: item.name === currentDistrict ? {
-                            borderColor: '#4f46e5', borderWidth: 4, z: 10 // 선택된 구 레이어 최상단
+                            borderColor: '#4f46e5', borderWidth: 4, z: 10
                         } : {}
                     }))
                 }]
             };
 
-            mapChart.setOption(option, { notMerge: false, lazyUpdate: true });
+            mapChart.setOption(option, true);
         }
     }
 
+    // 5. [추가] 데이터 연동 핵심 로직
     function updateDisplay() {
-        if (typeof rawData === 'undefined' || !rawData) {
-            console.warn("데이터가 아직 로드되지 않았습니다.");
-            return;
-        }
+        if (typeof rawData === 'undefined' || !rawData) return;
 
-        const modelLabel = currentModel === 'cold' ? '감기' : '천식';
         const diseaseKey = currentModel === 'cold' ? '감기' : '천식';
-
-        // [수정] SQL로 구한 서울시 전체 기간 평균 발생률 (1만명 당)
         const seoulAvg = currentModel === 'cold' ? 62.44 : 3.6;
 
+        // 구 이름 텍스트 변경
         $('#districtSelect').text(currentDistrict);
-        $('#dynamicTitle').text(`서울시 자치구별 ${modelLabel} 위험도`);
+        $('#dynamicTitle').text(`서울시 자치구별 ${diseaseKey} 위험도`);
 
-        const targetObj = (rawData[diseaseKey] && rawData[diseaseKey][currentDateIndex])
-                          ? rawData[diseaseKey][currentDateIndex]
-                          : null;
-
-        if (!targetObj) {
-            console.error(`${diseaseKey}의 ${currentDateIndex}일 데이터가 없습니다.`, rawData);
-            return;
-        }
-
-        // [수정] 데이터를 상대 지수(Index) 형태로 가공
-        const filteredData = Object.entries(targetObj).map(([distName, details]) => {
-            const rate = details.pred_rate;
-            // 위험 지수 = 현재 구의 예측 발생률 / 서울 전체 평균
-            const riskIndex = rate / seoulAvg;
-
-            return {
-                name: distName,
-                value: riskIndex,      // visualMap 매핑용 (1.0 기준)
-                realRate: rate,        // 실제 발생률 (예: 8.0)
-                cnt: details.pred_cnt
-            };
+        // [상단 카드 연동] 선택된 구의 4일치 데이터 반영
+        $('.summary-val').each(function(index) {
+            if (index === 0) return; // 미세먼지(첫번째 카드)는 패스
+            const dayIdx = index - 1; // 오늘(0), 내일(1), 모레(2), 3일후(3)
+            const dayData = rawData[diseaseKey][dayIdx][currentDistrict];
+            if (dayData) {
+                $(this).text(`${dayData.pred_cnt}명`);
+            }
         });
 
-        // [추가] 데이터의 실제 범위를 구해서 visualMap에 강제로 대비를 줌
-        const values = filteredData.map(d => d.value);
-        const minVal = Math.min(...values);
-        const maxVal = Math.max(...values);
+        // [선 그래프 연동]
+        updateLineCharts();
 
-        // 편차가 거의 없는 경우를 위해 보정 (값이 완전히 같을 때 에러 방지)
-        let mapMin, mapMax;
-        if (minVal === maxVal) {
-            mapMin = minVal * 0.7;
-            mapMax = maxVal * 1.3;
-        } else {
-            // [핵심] 범위를 데이터에 딱 맞게(Tight) 설정하여 색상 차이를 극대화
-            mapMin = minVal;
-            mapMax = maxVal;
+        // [우측 지표 연동]
+        const todayInfo = rawData[diseaseKey][currentDateIndex][currentDistrict];
+        if (todayInfo) {
+            const riskRatio = (todayInfo.pred_rate / seoulAvg) * 100;
+            const level = riskRatio > 120 ? '위험' : riskRatio > 90 ? '보통' : '안전';
+            const colorClass = riskRatio > 120 ? 'text-danger' : riskRatio > 90 ? 'text-warning' : 'text-success';
+            const barClass = riskRatio > 120 ? 'bg-danger' : riskRatio > 90 ? 'bg-warning' : 'bg-success';
+
+            $('#risk-progress-section').html(`
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span class="fw-bold">${currentDistrict} 현재</span><span class="${colorClass} fw-bold">${level} (${riskRatio.toFixed(0)}%)</span>
+                    </div>
+                    <div class="progress" style="height: 10px;"><div class="progress-bar ${barClass}" style="width: ${Math.min(riskRatio, 100)}%"></div></div>
+                </div>
+            `);
         }
 
-        const dateLabels = ['오늘', '내일', '모레', '3일 후'];
-        const statusText = `${modelLabel} | ${dateLabels[currentDateIndex]}`;
+        // [지도 데이터 계산]
+        const targetObj = rawData[diseaseKey][currentDateIndex];
+        const filteredData = Object.entries(targetObj).map(([distName, details]) => ({
+            name: distName,
+            value: details.pred_rate / seoulAvg,
+            realRate: details.pred_rate,
+            cnt: details.pred_cnt
+        }));
 
-        renderMap(filteredData, statusText, mapMin, mapMax);
+        const values = filteredData.map(d => d.value);
+        const minVal = Math.min(...values), maxVal = Math.max(...values);
+        const mapMin = minVal, mapMax = maxVal;
+
+        const dateLabels = ['오늘', '내일', '모레', '3일 후'];
+        renderMap(filteredData, `${diseaseKey} | ${dateLabels[currentDateIndex]}`, mapMin, mapMax);
     }
 
-    // 이벤트 리스너 (기존 로직 유지)
+    function updateLineCharts() {
+        const getSeries = (disease) => [0, 1, 2, 3].map(i => (rawData[disease][i][currentDistrict]?.pred_cnt || 0));
+        coldChart.setOption({ series: [{ data: [120, 130, 115].concat(getSeries('감기')) }] });
+        asthmaChart.setOption({ series: [{ data: [90, 85, 95].concat(getSeries('천식')) }] });
+    }
+
+    // 6. 이벤트 리스너
     mapChart.on('click', function(params) {
         currentDistrict = params.name;
         updateDisplay();
     });
 
     $(document).on('click', '.district-option', function() {
-        currentDistrict = $(this).text();
+        currentDistrict = $(this).text().trim();
         updateDisplay();
     });
 
@@ -211,35 +205,25 @@ $(document).ready(function() {
         updateDisplay();
     });
 
-    function createStepOption(title, data, mainColor) {
+    function createStepOption(title, mainColor) {
         return {
             grid: { top: '15%', left: '5%', right: '10%', bottom: '15%', containLabel: true },
-            tooltip: {
-                trigger: 'axis',
-                textStyle: { fontFamily: 'Pretendard' }
-            },
+            tooltip: { trigger: 'axis', textStyle: { fontFamily: 'Pretendard' } },
             xAxis: {
-                type: 'category',
-                boundaryGap: false,
+                type: 'category', boundaryGap: false,
                 data: ['3일전', '2일전', '1일전', '오늘', '내일', '모레', '글피'],
                 axisLabel: { fontSize: 10, fontFamily: 'Pretendard' }
             },
-            yAxis: {
-                type: 'value',
-                splitLine: { lineStyle: { type: 'dashed' } },
-                axisLabel: { fontFamily: 'Pretendard' }
-            },
+            yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed' } } },
             series: [{
-                name: title, type: 'line', step: 'start', symbol: 'circle', symbolSize: 8, data: data,
-                itemStyle: { color: mainColor }, lineStyle: { width: 3, color: mainColor },
-                areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: mainColor + '66' }, { offset: 1, color: mainColor + '00' }]) },
-                markLine: { symbol: ['none', 'none'], label: { show: false }, data: [{ xAxis: '오늘', lineStyle: { color: '#cbd5e0', type: 'dashed', width: 1 } }] }
+                name: title, type: 'line', step: 'start', symbol: 'circle', symbolSize: 6,
+                itemStyle: { color: mainColor }, lineStyle: { width: 2, color: mainColor }
             }]
         };
     }
 
-    coldChart.setOption(createStepOption('감기 환자수', [120, 130, 115, 145, 160, 175, 190], '#3b82f6'));
-    asthmaChart.setOption(createStepOption('천식 환자수', [90, 85, 95, 110, 135, 150, 165], '#f59e0b'));
+    coldChart.setOption(createStepOption('감기 환자수', '#3b82f6'));
+    asthmaChart.setOption(createStepOption('천식 환자수', '#f59e0b'));
 
     updateDisplay();
 
