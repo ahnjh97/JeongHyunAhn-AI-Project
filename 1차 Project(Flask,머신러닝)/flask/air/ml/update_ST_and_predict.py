@@ -5,7 +5,8 @@ import time
 import joblib
 import numpy as np
 import holidays
-from db_config import get_conn
+import os
+from air.db_config import get_conn
 from datetime import datetime, timedelta
 
 # 1. 네이버에서 발급받은 키 입력
@@ -96,67 +97,59 @@ def upsert_to_db(df, table_name):
         cursor.close()
         conn.close()
 
-def main():
-    keywords_cold = ["감기", "목감기", "코감기"]
-    keywords_asthma = ["천식", "벤토린", "네블라이저"]
-    table_cold = "SEARCH_TREND_COLD"
-    table_asthma = "SEARCH_TREND_ASTHMA"
 
-    anchor_cold = "2024-12-30" # 감기 기준 날짜
-    anchor_asthma = "2024-04-20" # 천식 기준 날짜
+# 수정된 main 함수
+def main(target_disease=None):
+    """
+    target_disease: 'cold', 'asthma' 또는 None (None일 경우 둘 다 수행)
+    """
+    # 1. 작업 대상 설정
+    tasks = []
+    if target_disease == 'cold':
+        tasks.append(('cold', ["감기", "목감기", "코감기"], "SEARCH_TREND_COLD", "2024-12-30"))
+    elif target_disease == 'asthma':
+        tasks.append(('asthma', ["천식", "벤토린", "네블라이저"], "SEARCH_TREND_ASTHMA", "2024-04-20"))
+    else:
+        # 인자가 없으면 기존처럼 둘 다 수행
+        tasks = [
+            ('cold', ["감기", "목감기", "코감기"], "SEARCH_TREND_COLD", "2024-12-30"),
+            ('asthma', ["천식", "벤토린", "네블라이저"], "SEARCH_TREND_ASTHMA", "2024-04-20")
+        ]
 
-    # 1. 며칠 전부터 시작할지 설정 (보통 1일 전부터 시도)
     days_back = 1
-    max_retries = 7  # 최대 일주일 전까지 시도
+    max_retries = 7
 
-    found_cold = False
-    found_asthma = False
+    # 각 태스크별 완료 여부 관리
+    completion = {task[0]: False for task in tasks}
 
     while days_back <= max_retries:
-        # 기준이 되는 타겟 날짜 (예: 오늘이 31일이면 30일)
         base_date_obj = datetime.now() - timedelta(days=days_back)
         target_end = base_date_obj.strftime('%Y-%m-%d')
-        # 기준 날짜로부터 3일 전까지의 범위 설정 (예: 28일 ~ 30일)
         target_start = (base_date_obj - timedelta(days=2)).strftime('%Y-%m-%d')
 
-        print(f"📅 [{days_back}일 전 기준] {target_start} ~ {target_end} 수집 시도 중...")
+        for d_type, keywords, table_name, anchor in tasks:
+            if not completion[d_type]:
+                df = get_anchored_daily_data(target_start, target_end, anchor, d_type, keywords)
 
-        # 감기 데이터 시도
-        if not found_cold:
-            df_cold = get_anchored_daily_data(target_start, target_end, anchor_cold, "cold", keywords_cold)
-            # 단순히 비어있지 않은지만 체크하는 게 아니라,
-            # '기준 날짜(target_end)'의 데이터가 실제로 포함되어 있는지 확인
-            if df_cold is not None and not df_cold.empty and (pd.to_datetime(target_end) in df_cold['period'].values):
-                upsert_to_db(df_cold, table_cold)
-                found_cold = True
-                predict_and_upload(df_cold, 'cold')
-                print(f"✅ 감기 데이터 수집 및 예측 데이터 업데이트 성공 (3일치 반영): {target_start} ~ {target_end}")
+                if df is not None and not df.empty and (pd.to_datetime(target_end) in df['period'].values):
+                    upsert_to_db(df, table_name)
+                    predict_and_upload(df, d_type)
+                    completion[d_type] = True
+                    print(f"✅ {d_type} 데이터 업데이트 성공: {target_start} ~ {target_end}")
 
-        # 천식 데이터 시도
-        if not found_asthma:
-            df_asthma = get_anchored_daily_data(target_start, target_end, anchor_asthma, "asthma", keywords_asthma)
-            if df_asthma is not None and not df_asthma.empty and (
-                    pd.to_datetime(target_end) in df_asthma['period'].values):
-                upsert_to_db(df_asthma, table_asthma)
-                found_asthma = True
-                predict_and_upload(df_asthma, 'asthma')
-                print(f"✅ 천식 데이터 수집 성공 (3일치 반영): {target_start} ~ {target_end}")
-
-        if found_cold and found_asthma:
+        # 모든 요청 태스크가 완료되면 중단
+        if all(completion.values()):
             break
 
-        # 하나라도 못 찾았으면 하루 더 과거로
         days_back += 1
-        time.sleep(0.1)  # API 부하 방지
-
-    if not (found_cold and found_asthma):
-        print("⚠️ 일부 데이터를 최근 7일 내에서 찾지 못했습니다. API 점검이나 키워드를 확인해 보세요.")
+        time.sleep(0.1)
 
 def predict_and_upload(df_result, disease_type='cold'):
     if df_result is None or df_result.empty:
         return
 
-    model_path = f"st2pr_{disease_type.lower()}.pkl"
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(base_path, f"st2pr_{disease_type.lower()}.pkl")
     try:
         model = joblib.load(model_path)
     except:
@@ -232,4 +225,5 @@ def predict_and_upload(df_result, disease_type='cold'):
         conn.close()
 
 if __name__ == "__main__":
+    # 직접 실행 시에는 인자 없이 호출하여 둘 다 수행
     main()

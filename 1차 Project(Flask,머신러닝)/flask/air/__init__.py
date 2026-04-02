@@ -17,13 +17,12 @@ def create_app():
     # 질병별 모델을 담을 딕셔너리 초기화
     app.ml_models = {}
 
+    base_path = os.path.dirname(os.path.abspath(__file__))
     # 로드해야 할 질병 리스트
     diseases = ['asthma', 'cold']  # 천식, 감기
 
-    model_dir = os.path.join(app.root_path, '../../ML/XGBoost')
-
     for disease in diseases:
-        model_path = os.path.join(model_dir, f'model_{disease}_seoul.pkl')
+        model_path = os.path.join(base_path, 'ml', f'model_{disease}_seoul.pkl')
         try:
             if os.path.exists(model_path):
                 app.ml_models[disease] = joblib.load(model_path)
@@ -39,7 +38,7 @@ def create_app():
     csrf.init_app(app)
 
     # 해당 파일에 정의된 모든 모델 클래스를 애플리케이션에 등록.
-    from . import models
+    from . import ml
 
     #Blueprint
     from.views import main_views, question_views, answer_views, auth_views, service_views

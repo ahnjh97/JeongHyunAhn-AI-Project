@@ -4,7 +4,7 @@ from werkzeug.utils import redirect
 from datetime import datetime
 
 from air import db
-from air.models import Question,Answer
+from air.models import Question, Answer
 
 bp = Blueprint('answer',__name__, url_prefix='/answer')
 

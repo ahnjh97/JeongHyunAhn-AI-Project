@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import holidays
+import os
 from xgboost import XGBRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
@@ -22,7 +23,7 @@ def train_disease_xgb(df, disease_type, run_cv=False):
         f"{disease_type.upper()}_CNT_D_PLUS_2",
         f"{disease_type.upper()}_CNT_D_PLUS_3"
     ]
-
+    print(df[['DIST_CODE', 'POP_TOTAL']].drop_duplicates().head())
     # [2] 발생률 및 로그 변환
     y_rate = pd.DataFrame()
     for col in target_cnt_cols:
@@ -141,10 +142,16 @@ def train_disease_xgb(df, disease_type, run_cv=False):
     print(f"📈 전체 평균 R2 Score: {r2:.4f}")
     print(f"📊 전체 평균 MAE: {mae:.4f} (명/1만명)")
 
+    # 저장할 경로 설정 (현재 폴더에서 flask 쪽으로 거슬러 올라감)
+    save_path = f"../../flask/air/models/model_{disease_type.lower()}_seoul.pkl"
+
+    # 폴더가 없으면 미리 생성 (에러 방지)
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
     # [8] 모델 저장 (스케일러는 필요 없음)
-    model_filename = f'model_{disease_type.lower()}_seoul.pkl'
-    joblib.dump(multi_model, model_filename)
-    print(f"💾 모델 저장 완료: {model_filename}")
+    # model_filename = f'model_{disease_type.lower()}_seoul.pkl'
+    joblib.dump(multi_model, save_path)
+    print(f"💾 모델 저장 완료: {save_path}")
 
     # 중요도 시각화용 데이터
     first_model = multi_model.estimators_[0]
