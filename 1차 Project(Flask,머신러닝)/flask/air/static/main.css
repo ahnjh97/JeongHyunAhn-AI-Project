@@ -1,0 +1,139 @@
+/* Full-page 스크롤 설정 */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 기본 스크롤 제거 */
+}
+
+.scroll-container {
+    height: 100vh;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    position: relative; /* absolute 요소인 네비바가 이 컨테이너를 기준으로 움직이게 함 */
+}
+.scroll-container::-webkit-scrollbar { display: none; }
+
+/* 섹션 공통 */
+.scroll-section {
+    height: 100vh;
+    width: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 캐러셀 스타일 */
+.carousel, .carousel-inner, .carousel-item {
+    height: 100%;
+}
+.carousel-item {
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+/* [수정] 글씨가 보이도록 레이어 순서(z-index) 조정 */
+.carousel-item::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4); /* 어둡기 정도 조정 */
+    z-index: 1; /* 배경은 1번 */
+}
+
+/* [추가] 캡션 위치 및 레이어 강제 설정 + 텍스트 선택 방지 */
+.carousel-caption {
+    z-index: 10 !important; /* 배경보다 무조건 앞으로 */
+    bottom: 35% !important; /* 위치 조정 */
+    /* 텍스트 선택 방지 */
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+
+.carousel-caption h1 {
+    font-weight: 800 !important;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    color: #ffffff !important;
+}
+
+/* 캐러셀 좌우 컨트롤 버튼 - 크기 축소 및 호버 영역 제한 */
+.carousel-control-prev,
+.carousel-control-next {
+    z-index: 15;
+    width: 60px;  /* 영역이 화면 옆면을 다 차지하지 않도록 고정 크기 부여 */
+    height: 60px; /* 정사각형 영역 */
+    top: 50%;     /* 세로 중앙 정렬 */
+    transform: translateY(-50%);
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    background: none !important; /* 호버 시 배경색 표시 방지 */
+}
+
+/* 왼쪽 버튼 위치 */
+.carousel-control-prev { left: 20px; }
+/* 오른쪽 버튼 위치 */
+.carousel-control-next { right: 20px; }
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    opacity: 1;
+    background: none !important; /* 영역 표시 안 되게 다시 한번 강제 */
+}
+
+/* 화살표 아이콘 크기 줄이기 및 SVG 설정 */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    width: 2.2rem;  /* 아이콘 크기 축소 (기존 3.5rem에서 줄임) */
+    height: 2.2rem;
+    background-size: 100% 100%;
+    transition: transform 0.2s ease-in-out;
+}
+
+/* 왼쪽 화살표 (순백색) */
+.carousel-control-prev-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e") !important;
+}
+
+/* 오른쪽 화살표 (순백색) */
+.carousel-control-next-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+}
+
+/* 호버 시 아이콘(버튼)만 살짝 커지는 효과 */
+.carousel-control-prev:hover .carousel-control-prev-icon,
+.carousel-control-next:hover .carousel-control-next-icon {
+    transform: scale(1.2);
+}
+
+/* 카드 및 메뉴 스타일 */
+.service-card {
+    transition: transform 0.3s ease;
+    border: none;
+}
+.service-card:hover {
+    transform: translateY(-10px);
+}
+.icon-circle {
+    width: 60px; height: 60px;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    font-size: 1.5rem; color: #0d6efd;
+}
+
+/* 푸터 설정 */
+.main-footer {
+    scroll-snap-align: end;
+    background-color: #1a1d20;
+    min-height: 200px;
+}

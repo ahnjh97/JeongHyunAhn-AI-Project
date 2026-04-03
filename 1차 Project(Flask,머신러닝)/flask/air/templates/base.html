@@ -15,6 +15,9 @@
     {% if 'service' in request.endpoint %}
     <link rel="stylesheet" href="{{ url_for('static', filename='service.css') }}">
     {% endif %}
+    {% if 'main' in request.endpoint %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    {% endif %}
 
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 
@@ -22,7 +25,9 @@
 </head>
 
 <body>
-{% include "navbar.html" %}
+<button id="backToTop" title="Go to top">
+    <i class="bi bi-arrow-up"></i>
+</button>
 <!-- 기본 템플릿에 삽입할 내용 Start -->
 {% block content %}
 <!-- 여기 안에 HTML 컨텐츠가 들어감 -->

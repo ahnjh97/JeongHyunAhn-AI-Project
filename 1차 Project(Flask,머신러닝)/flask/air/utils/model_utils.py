@@ -40,29 +40,40 @@ def run_sub_model(disease_type):
     update_ST_and_predict.main(disease_type)
     print(f"✅ {disease_type} 서브모델(ST2PR) 실행 완료")
 
-# 오늘 기준의 메인모델 출력 데이터가 DB에 존재하는지 확인
 def check_main_model_data(disease_type):
     """
-    오늘(SYSDATE) 생성된 특정 질병의 예측 데이터가
-    서울시 25개 구 x 4일치(0~3) = 총 100건이 존재하는지 확인
+    오늘 날짜의 특정 질병 데이터가
+    25개 구 x 4일치(0~3) = 총 100개의 고유한 조합으로 존재하는지 확인
     """
     try:
+        # 1. 파이썬에서 직접 오늘 날짜 생성 (Timezone 이슈 방지)
+        today_str = datetime.now().strftime('%Y-%m-%d')
+
         with get_conn() as conn:
             with conn.cursor() as cursor:
-                # TRUNC(created_at)을 사용하여 시/분/초를 제외한 '날짜'만 비교
+                # 2. 단순히 COUNT(*)가 아니라 DISTINCT 조합을 체크하거나
+                #    최신 배치(Batch) ID가 있다면 그걸 활용하는 것이 좋습니다.
                 sql = """
                     SELECT COUNT(*) 
-                    FROM MODEL_OUTPUTS 
-                    WHERE disease_type = :d_type 
-                      AND TRUNC(created_at) = TRUNC(SYSDATE)
+                    FROM (
+                        SELECT DISTINCT dist_code, pred_date 
+                        FROM MODEL_OUTPUTS 
+                        WHERE disease_type = :d_type 
+                          AND TO_CHAR(created_at, 'YYYY-MM-DD') = :today
+                    )
                 """
 
-                cursor.execute(sql, d_type=disease_type)
+                # 바인딩 변수를 명확하게 전달
+                cursor.execute(sql, d_type=disease_type, today=today_str)
                 count = cursor.fetchone()[0]
 
-                # 25개 구 * 4일치(0,1,2,3) = 총 100건이 있어야 완벽한 데이터로 간주
-                # 만약 날짜별로 따로 체크하고 싶다면 p_day 조건을 추가해야 합니다.
-                return count >= 100
+                # 25개 구 * 4일치 = 100개의 고유 데이터가 있는지 확인
+                is_valid = (count == 100)
+
+                if not is_valid:
+                    print(f"⚠️ 데이터 불완전: {disease_type} ({count}/100 건 발견)")
+
+                return is_valid
 
     except Exception as e:
         print(f"❌ 메인 모델 데이터 체크 중 오류 ({disease_type}): {e}")
@@ -98,6 +109,7 @@ def fetch_prediction_from_db(d_type, day):
     딕셔너리 형태로 긁어오는 함수
     """
     try:
+        today_str = datetime.now().strftime('%Y-%m-%d')  # 오늘 날짜 고정
         with get_conn() as conn:
             with conn.cursor() as cursor:
                 sql = """
@@ -108,9 +120,9 @@ def fetch_prediction_from_db(d_type, day):
                     FROM MODEL_OUTPUTS 
                     WHERE disease_type = :d_type 
                       AND pred_date = :p_day
-                      AND TRUNC(created_at) = TRUNC(SYSDATE)
+                      AND TO_CHAR(created_at, 'YYYY-MM-DD') = :today
                 """
-                cursor.execute(sql, d_type=d_type, p_day=day)
+                cursor.execute(sql, d_type=d_type, p_day=day, today=today_str)
                 rows = cursor.fetchall()
 
                 # 자치구 이름을 Key로 하는 딕셔너리 생성

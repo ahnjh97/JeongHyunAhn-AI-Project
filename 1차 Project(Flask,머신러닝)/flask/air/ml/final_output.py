@@ -212,19 +212,16 @@ def save_to_model_outputs(d_type, day, predictions):
         conn = get_conn()  # 기존에 작성하신 커넥션 함수 호출
         cursor = conn.cursor()
 
+        delete_sql = "DELETE FROM MODEL_OUTPUTS WHERE DISEASE_TYPE = :1 AND PRED_DATE = :2"
+        cursor.execute(delete_sql, [d_type, int(day)])
+        print(f"🧹 [DB 초기화] {d_type} | Day Index: {day} 기존 데이터 삭제 완료")
+
         # MERGE 쿼리: 구코드, 질병타입, 예측일(0~3) 세 가지가 기준(Key)이 됩니다.
-        sql = """
-            MERGE INTO MODEL_OUTPUTS M
-            USING DUAL
-            ON (M.DIST_CODE = :1 AND M.DISEASE_TYPE = :2 AND M.PRED_DATE = :3)
-            WHEN MATCHED THEN
-                UPDATE SET M.DIST_NAME = :4, 
-                           M.PRED_RATE = :5, 
-                           M.PRED_CNT = :6
-            WHEN NOT MATCHED THEN
-                INSERT (DIST_CODE, DISEASE_TYPE, PRED_DATE, DIST_NAME, PRED_RATE, PRED_CNT, CREATED_AT)
-                VALUES (:1, :2, :3, :4, :5, :6, SYSDATE)
-        """
+        insert_sql = """
+                    INSERT INTO MODEL_OUTPUTS 
+                    (DIST_CODE, DISEASE_TYPE, PRED_DATE, DIST_NAME, PRED_RATE, PRED_CNT, CREATED_AT)
+                    VALUES (:1, :2, :3, :4, :5, :6, SYSDATE)
+                """
 
         # 데이터 바인딩 준비
         bind_data = []
@@ -239,7 +236,7 @@ def save_to_model_outputs(d_type, day, predictions):
             ))
 
         # executemany로 25개 자치구 한꺼번에 처리
-        cursor.executemany(sql, bind_data)
+        cursor.executemany(insert_sql, bind_data)
         conn.commit()
 
         print(f"✅ [DB 적재 완료] {d_type} | Day Index: {day} | {len(bind_data)}건")

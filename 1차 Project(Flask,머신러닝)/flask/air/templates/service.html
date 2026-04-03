@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-
 {% block content %}
+{% include "navbar.html" %}
 <div class="main-visual-section px-3">
     <div class="container-fluid">
         <div class="row g-3">
@@ -91,4 +91,5 @@
     const prevData = JSON.parse('{{ chart_data | safe }}');   // 과거 데이터 (3일)
 </script>
 <script src="{{ url_for('static', filename='js/service.js') }}"></script>
+<script src="{{ url_for('static', filename='js/scroll.js') }}"></script>
 {% endblock %}

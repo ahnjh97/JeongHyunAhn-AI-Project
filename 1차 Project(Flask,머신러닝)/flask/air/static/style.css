@@ -195,3 +195,140 @@ body {
     margin-bottom: 15px;
     text-align: center;
 }
+
+/* 1. 네비바 배경 완전 투명화 */
+.navbar-transparent {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-top: 20px; /* 상단에서 살짝 띄워줌 */
+}
+
+/* 2. 네비바 메뉴 텍스트 (흰색 + 그림자) */
+.navbar-transparent .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.navbar-transparent .nav-link:hover {
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+/* 3. 회원가입 버튼만 강조 (유리 질감 느낌) */
+.btn-air-nav-start {
+    background: rgba(255, 255, 255, 0.2); /* 반투명 흰색 */
+    backdrop-filter: blur(5px); /* 뒤쪽 살짝 흐리게 */
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white !important;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 50px;
+    transition: all 0.3s;
+}
+
+.btn-air-nav-start:hover {
+    background: #ffffff; /* 호버 시 흰색으로 꽉 참 */
+    color: #0ea5e9 !important; /* 글자는 브랜드 컬러로 */
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
+/* 4. 로고 텍스트 강조 */
+.navbar-brand span {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* --- 네비바 기본 설정 --- */
+.navbar-air {
+    transition: all 0.3s ease;
+    padding: 10px 0;
+    z-index: 1050;
+}
+
+/* --- [1] 데스크탑 기준 (992px 이상) --- */
+@media (min-width: 992px) {
+    .navbar-air {
+        /* 부트스트랩의 fixed-top이나 sticky-top 클래스가 혹시라도 섞여있다면 무력화 */
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+
+        /* 고정 해제 확인 */
+        display: flex !important;
+        float: none !important;
+    }
+
+    /* 메인 페이지: 투명 + 흰색글씨 */
+    .navbar-air.is-main-nav {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    .navbar-air.is-main-nav #nav-brand-text,
+    .navbar-air.is-main-nav .nav-link { color: white !important; }
+
+    /* 메인 이외 페이지: 흰색배경 + 검은색글씨 */
+    .navbar-air:not(.is-main-nav) {
+        background: white !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .navbar-air:not(.is-main-nav) #nav-brand-text,
+    .navbar-air:not(.is-main-nav) .nav-link { color: black !important; }
+}
+
+/* --- [2] 모바일 기준 (991px 이하) --- */
+@media (max-width: 991px) {
+    .navbar-air {
+        position: fixed !important; /* 항상 따라옴 */
+        top: 0; width: 100%;
+        z-index: 1050 !important;
+    }
+
+    /* 모바일 투명 상태 (캐러셀 영역) */
+    .navbar-air.mobile-transparent {
+        background: transparent !important;
+    }
+    .navbar-air.mobile-transparent #nav-brand-text { color: white !important; }
+    .navbar-air.mobile-transparent .navbar-toggler-icon { filter: invert(1); }
+
+    /* 모바일 흰색 상태 (그 외 영역) */
+    .navbar-air.mobile-white {
+        background: white !important;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        padding: 0px 0 !important; /* 스크롤 시 살짝 더 얇게 */
+    }
+    .navbar-air.mobile-white #nav-brand-text { color: black !important; }
+    .navbar-air.mobile-white .navbar-toggler-icon { filter: none; }
+}
+
+/* 사이드바(Offcanvas) 본체 */
+.offcanvas {
+    z-index: 2100 !important; /* 네비바(1050)나 다른 요소들보다 압도적으로 높게 설정 */
+}
+
+/* 사이드바가 열릴 때 생기는 어두운 배경막 */
+.offcanvas-backdrop {
+    z-index: 2050 !important; /* 사이드바 바로 아래, 하지만 다른 일반 요소보다는 위 */
+}
+
+/* --- TOP 버튼 스타일 --- */
+#backToTop {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: none; /* 초기 숨김 */
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    border: none;
+    background: linear-gradient(135deg, #0ea5e9 0%, #7e22ce 100%);
+    color: white;
+    transition: transform 0.3s;
+}
+#backToTop:hover { transform: translateY(-5px); }

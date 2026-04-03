@@ -97,11 +97,6 @@ def train_st2pr_model(disease_type='COLD', train_end_date='2024-12-31'):
     joblib.dump(model, save_path)
     print(f"💾 모델 저장 완료: {save_path}")
 
-    import matplotlib.pyplot as plt
-
-    plt.barh(features, model.feature_importances_)
-    plt.show()
-
     return model
 
 if __name__ == "__main__":

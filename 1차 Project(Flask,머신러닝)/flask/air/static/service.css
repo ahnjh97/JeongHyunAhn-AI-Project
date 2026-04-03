@@ -9,13 +9,6 @@
         flex-direction: column;
     }
 
-    /* 네비바가 fixed-top일 때 자리를 비워주기 위한 설정 */
-    .navbar.fixed-top {
-        position: fixed; /* 고정 유지 */
-        width: 100%;
-        z-index: 1030;
-    }
-
     .main-visual-section {
         flex-grow: 1;
         width: 100%;

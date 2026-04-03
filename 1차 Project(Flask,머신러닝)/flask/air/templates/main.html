@@ -1,28 +1,128 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="main-visual-section is-main px-3">
-    <div class="main-content-wrapper">
-        <div class="mb-3">
-            <p class="gradient-text-sub">데이터 기반 호흡기 위험도 분석</p>
+<div class="scroll-container">
+    {% include "navbar.html" %}
+    <section class="scroll-section">
+        <div id="mainCarousel" class="carousel slide carousel-fade h-100 w-100" data-bs-ride="carousel" data-bs-interval="3000">
+            <div class="carousel-inner h-100">
+                <div class="carousel-item active h-100" style="background-image: url('{{ url_for('static', filename='images/bg1.png') }}');">
+                    <div class="carousel-overlay"></div>
+                    <div class="carousel-caption custom-caption no-select">
+                        <h1 class="main-title mb-4 fw-bold">
+                            AI 기반<br>
+                            서울시 미세먼지 대응<br>
+                            호흡기 건강 예보 서비스
+                        </h1>
+                        <p class="lead">서울시 25개 자치구의 대기질 기반으로 위험도를 실시간 분석합니다.</p>
+                    </div>
+                </div>
+                <div class="carousel-item h-100" style="background-image: url('{{ url_for('static', filename='img/bg2.jpg') }}');">
+                    <div class="carousel-overlay"></div>
+                    <div class="carousel-caption custom-caption no-select">
+                        <h1 class="display-4 fw-bold">정교한 시계열 예측</h1>
+                        <p class="lead">과거 10년의 데이터를 바탕으로 3일 뒤를 내다봅니다.</p>
+                    </div>
+                </div>
+                <div class="carousel-item h-100" style="background-image: url('{{ url_for('static', filename='img/bg3.jpg') }}');">
+                    <div class="carousel-overlay"></div>
+                    <div class="carousel-caption custom-caption no-select">
+                        <h1 class="display-4 fw-bold">맞춤형 건강 예보</h1>
+                        <p class="lead">인구 구조와 환경 요인을 고려한 개인화된 정보를 제공합니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon custom-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon custom-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
         </div>
+    </section>
 
-        <h1 class="main-title mb-4">
-            AI 기반<br>
-            서울시 미세먼지 대응<br>
-            호흡기 건강 예보 서비스
-        </h1>
-
-        <div class="mb-5 mt-4">
-            <a href="{{ url_for('service.service') }}" class="btn-air-start shadow-sm">
-                시작하기
-            </a>
+    <section class="scroll-section bg-light">
+        <div class="container h-100 d-flex align-items-center">
+            <div class="row w-100 g-4">
+                <div class="col-md-6">
+                    <div class="service-card p-5 shadow-sm bg-white rounded-4 h-100">
+                        <span class="badge bg-primary mb-3">AI Prediction</span>
+                        <h3>호흡기 질환 예측</h3>
+                        <p class="text-muted">자치구별 미세먼지, 기온, 인구 데이터를 분석하여 감기 및 천식 환자수를 예측합니다.</p>
+                        <a href="{{ url_for('service.service') }}" class="btn btn-outline-primary rounded-pill px-4">예측 결과 보기</a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="service-card p-5 shadow-sm bg-white rounded-4 h-100">
+                        <span class="badge bg-success mb-3">AI Analysis</span>
+                        <h3>왜 위험한가요?</h3>
+                        <p class="text-muted">AI 모델이 분석한 현재 위험 요인을 확인하세요. 미세먼지 기여도, 기온 변화율 등을 시각화하여 제공합니다.</p>
+                        <a href="#" class="btn btn-outline-success rounded-pill px-4">분석 리포트 보기</a>
+                    </div>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <p class="main-footer-text">
-            머신러닝 기반의 정교한 시계열 분석으로 <strong>호흡기 질환 발생 추이</strong>를 미리 확인하세요.
-        </p>
-    </div>
+    <section class="scroll-section bg-white d-flex flex-column">
+        <div class="container flex-grow-1 d-flex align-items-center">
+            <div class="row w-100 text-center g-4 py-5">
+                <div class="col-md-4">
+                    <div class="menu-item p-4">
+                        <div class="icon-circle mb-3"><i class="bi bi-headset"></i></div>
+                        <h4>문의사항</h4>
+                        <p class="small text-muted">서비스 이용 중 불편한 점을 알려주세요.</p>
+                        <a href="/contact" class="btn btn-sm btn-link text-decoration-none">자세히 보기 →</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="menu-item p-4 border-start border-end">
+                        <div class="icon-circle mb-3"><i class="bi bi-shield-check"></i></div>
+                        <h4>건강 가이드</h4>
+                        <p class="small text-muted">오늘의 공기에 맞는 행동 수칙을 추천합니다.</p>
+                        <a href="/guide" class="btn btn-sm btn-link text-decoration-none">자세히 보기 →</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="menu-item p-4">
+                        <div class="icon-circle mb-3"><i class="bi bi-database"></i></div>
+                        <h4>데이터 투명성</h4>
+                        <p class="small text-muted">학습에 사용된 공공 데이터 출처 확인.</p>
+                        <a href="/analysis" class="btn btn-sm btn-link text-decoration-none">자세히 보기 →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="main-footer w-100 py-5 bg-dark text-white">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-4 mb-4 mb-md-0">
+                        <h4 class="fw-bold mb-1">AIR PROJECT</h4>
+                        <p class="small text-secondary mb-0">Smart Air-Health Forecast System</p>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                            <a href="/" class="btn btn-sm btn-dark border-secondary px-3">Home</a>
+                            <a href="/service" class="btn btn-sm btn-dark border-secondary px-3">Service</a>
+                            <a href="/analysis" class="btn btn-sm btn-dark border-secondary px-3">XAI Analysis</a>
+                            <a href="/guide" class="btn btn-sm btn-dark border-secondary px-3">Health Guide</a>
+                            <a href="/contact" class="btn btn-sm btn-dark border-secondary px-3">Contact</a>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-4 border-secondary opacity-25">
+                <p class="text-center small text-secondary mb-0">© 2026 AIR Team. All Rights Reserved.</p>
+            </div>
+        </footer>
 </div>
 
+{% endblock %}
+
+{% block script %}
+<script src="{{ url_for('static', filename='js/scroll.js') }}"></script>
 {% endblock %}
