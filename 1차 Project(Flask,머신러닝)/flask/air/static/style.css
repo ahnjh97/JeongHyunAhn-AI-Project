@@ -110,7 +110,7 @@ body {
 }
 
 /* 모바일 화면에서는 화면이 작으므로 패딩을 조금 줄여줍니다. */
-@media (max-width: 992px) {
+@media (max-width: 991px) {
     .main-content-wrapper {
         /* 모바일에서 너무 내려가 보이면 이 숫자를 줄이세요. */
         padding-top: 60px !important;
@@ -132,7 +132,7 @@ body {
 }
 
 /* 모바일 화면에서는 자연스럽게 두 줄이 되도록 처리 */
-@media (max-width: 600px) {
+@media (max-width: 991px) {
     .main-footer-text {
         white-space: normal;
         font-size: 0.85rem;
@@ -239,68 +239,54 @@ body {
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* --- 네비바 기본 설정 --- */
+/* --- 네비바 절대 위치 설정 (안 따라옴) --- */
 .navbar-air {
-    transition: all 0.3s ease;
-    padding: 10px 0;
+    position: absolute !important;
+    top: 0; left: 0; right: 0;
+    width: 100%;
     z-index: 1050;
+    padding: 15px 0;
 }
 
-/* --- [1] 데스크탑 기준 (992px 이상) --- */
+/* [데스크탑 992px 이상] */
 @media (min-width: 992px) {
-    .navbar-air {
-        /* 부트스트랩의 fixed-top이나 sticky-top 클래스가 혹시라도 섞여있다면 무력화 */
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        width: 100% !important;
-
-        /* 고정 해제 확인 */
-        display: flex !important;
-        float: none !important;
-    }
-
-    /* 메인 페이지: 투명 + 흰색글씨 */
+    /* 메인 페이지: 투명 + 흰글씨 */
     .navbar-air.is-main-nav {
         background: transparent !important;
-        box-shadow: none !important;
     }
-    .navbar-air.is-main-nav #nav-brand-text,
-    .navbar-air.is-main-nav .nav-link { color: white !important; }
+    .navbar-air.is-main-nav .nav-link,
+    .navbar-air.is-main-nav #nav-brand-text {
+        color: white !important;
+    }
+    .navbar-air.is-main-nav .navbar-toggler-icon {
+        filter: invert(1); /* 메인에서 토글 버튼 흰색 */
+    }
 
-    /* 메인 이외 페이지: 흰색배경 + 검은색글씨 */
-    .navbar-air:not(.is-main-nav) {
+    /* 메인 외 페이지: 흰배경 + 검은글씨 */
+    .navbar-air.is-not-main {
         background: white !important;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
-    .navbar-air:not(.is-main-nav) #nav-brand-text,
-    .navbar-air:not(.is-main-nav) .nav-link { color: black !important; }
+    .navbar-air.is-not-main .nav-link,
+    .navbar-air.is-not-main #nav-brand-text {
+        color: #111827 !important;
+    }
 }
 
-/* --- [2] 모바일 기준 (991px 이하) --- */
+/* [모바일 991px 이하] */
 @media (max-width: 991px) {
     .navbar-air {
-        position: fixed !important; /* 항상 따라옴 */
-        top: 0; width: 100%;
-        z-index: 1050 !important;
-    }
-
-    /* 모바일 투명 상태 (캐러셀 영역) */
-    .navbar-air.mobile-transparent {
-        background: transparent !important;
-    }
-    .navbar-air.mobile-transparent #nav-brand-text { color: white !important; }
-    .navbar-air.mobile-transparent .navbar-toggler-icon { filter: invert(1); }
-
-    /* 모바일 흰색 상태 (그 외 영역) */
-    .navbar-air.mobile-white {
-        background: white !important;
+        background: white !important; /* 무조건 흰배경 */
+        padding: 5px 0 !important;   /* 더 좁게 */
         box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-        padding: 0px 0 !important; /* 스크롤 시 살짝 더 얇게 */
     }
-    .navbar-air.mobile-white #nav-brand-text { color: black !important; }
-    .navbar-air.mobile-white .navbar-toggler-icon { filter: none; }
+    .navbar-air #nav-brand-text,
+    .navbar-air .nav-link {
+        color: #111827 !important; /* 무조건 검은글씨 */
+    }
+    .navbar-air .navbar-toggler-icon {
+        filter: none !important; /* 무조건 검은색 아이콘 */
+    }
 }
 
 /* 사이드바(Offcanvas) 본체 */

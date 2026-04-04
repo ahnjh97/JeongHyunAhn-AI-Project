@@ -4,7 +4,6 @@ html, body {
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden; /* 기본 스크롤 제거 */
 }
 
 .scroll-container {
@@ -136,4 +135,62 @@ html, body {
     scroll-snap-align: end;
     background-color: #1a1d20;
     min-height: 200px;
+}
+
+/* --- 1. 데스크탑 기준 (992px 이상) --- */
+@media (min-width: 992px) {
+    /* 풀페이지 스크롤 유지 */
+    html, body {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    body { overflow: hidden; }
+    .scroll-container {
+        height: 100vh;
+        overflow-y: auto;
+        scroll-snap-type: y mandatory;
+    }
+    .scroll-section {
+        height: 100vh;
+        scroll-snap-align: start;
+        padding-top: 100px; /* 네비바 공간 확보 */
+    }
+}
+
+/* --- 2. 모바일 기준 (991px 이하) --- */
+@media (max-width: 991px) {
+    /* 풀페이지 스크롤 해제 (모바일은 자연스러운 스크롤이 필수) */
+    html, body {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .scroll-container {
+        height: auto !important;
+        overflow-y: visible !important;
+        display: block !important;
+        scroll-snap-type: none !important; /* 스냅 기능 끄기 */
+    }
+
+    .scroll-section {
+        height: auto !important; /* 내용에 맞춰 높이 조절 */
+        min-height: 100vh;
+        display: block !important;
+        /* [중요] 내비바가 fixed이므로 본문이 가려지지 않게 패딩 추가 */
+        padding-top: 75px !important;
+    }
+
+    /* 캐러셀 높이 및 가려짐 방지 */
+    #mainCarousel, .carousel-item {
+        height: 70vh !important; /* 너무 길면 다음 내용이 안 보이므로 줄임 */
+    }
+
+    .carousel-caption {
+        bottom: 20% !important; /* 캡션을 위로 올려서 네비바와 겹침 방지 */
+    }
+
+    .main-title {
+        font-size: 1.8rem !important; /* 폰트 크기 축소 */
+    }
 }
