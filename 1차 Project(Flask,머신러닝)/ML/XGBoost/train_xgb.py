@@ -9,154 +9,118 @@ from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import TimeSeriesSplit
 from db_config import get_conn
 
-def train_disease_xgb(df, disease_type, run_cv=False):
+def train_disease_xgb(df_feat, disease_type):
     """
-    XGBoost를 이용한 질병별 4일치(D0~D3) 발생률 예측 모델
-    (One-Hot Encoding 및 Scaling 제거 버전)
+    환자 수(CNT) 데이터를 1만 명당 환자 비율(RATIO)로 통일하여 학습
+    - 타겟(D0~D3) 및 과거 데이터(PREV_D1~3) 모두 비율 변환
     """
-    print(f"\n🔥 [{disease_type} 발생률 XGBoost 모델] 학습 시작 (Target: 1만명당 환자수)...")
+    df_feat = df_feat.copy()
+    kr_holidays = holidays.KR()
 
-    # [1] 타겟 추출 (D0 ~ D+3)
-    target_cnt_cols = [
-        f"{disease_type.upper()}_CNT_D0",
-        f"{disease_type.upper()}_CNT_D_PLUS_1",
-        f"{disease_type.upper()}_CNT_D_PLUS_2",
-        f"{disease_type.upper()}_CNT_D_PLUS_3"
-    ]
-    print(df[['DIST_CODE', 'POP_TOTAL']].drop_duplicates().head())
-    # [2] 발생률 및 로그 변환
-    y_rate = pd.DataFrame()
-    for col in target_cnt_cols:
-        rate = (df[col] / df['POP_TOTAL'].replace(0, np.nan)) * 10000
-        y_rate[col] = np.log1p(rate)
-    y_rate = y_rate.fillna(0)
-
-    # [3] 특징(X) 생성 및 전처리
-    all_target_cols = [col for col in df.columns if 'CNT_D' in col.upper()]
-    all_prev_cols = ["COLD_PREV_D1", "COLD_PREV_D2", "COLD_PREV_D3",
-                     "ASTHMA_PREV_D1", "ASTHMA_PREV_D2", "ASTHMA_PREV_D3"]
-
-    # 환자 수로 학습하는 것이 아닌 환자 비율로 학습
-    # 원본 df를 직접 수정하지 않기 위해 복사본 사용
-    df_feat = df.copy()
-    for col in all_prev_cols:
+    cat_features = ['DIST_CODE', 'STD_MONTH']
+    for col in cat_features:
         if col in df_feat.columns:
-            # 1. 1만명당 발생률 계산
-            rate = (df_feat[col] / df_feat['POP_TOTAL'].replace(0, np.nan)) * 10000
-            # 2. 로그 변환 적용 (Y값과 동일한 스케일 유지)
-            df_feat[col] = np.log1p(rate)
+            # 문자열이나 단순 숫자를 'category' 타입으로 변경
+            df_feat[col] = df_feat[col].astype('category')
 
-    df_feat = df_feat.fillna(0)  # 결측치 처리
+    # ---------------------------------------------------------
+    # 1. 과거 데이터(PREV) 변환: 수(CNT) -> 1만 명당 비율(RATIO)
+    # ---------------------------------------------------------
+    # 감기(COLD)와 천식(ASTHMA) 두 질병 모두의 과거 데이터를 비율로 변환합니다.
+    for disease in ['COLD', 'ASTHMA']:
+        for i in range(1, 4):  # D1, D2, D3
+            prev_cnt_col = f'{disease}_PREV_D{i}'
+            if prev_cnt_col in df_feat.columns:
+                # 기존 CNT 컬럼을 RATIO로 업데이트 (1만명당 비율)
+                df_feat[prev_cnt_col] = (df_feat[prev_cnt_col] / df_feat['POP_TOTAL']) * 10000
 
-    # [3-1] 한국 공휴일 및 휴일 특징 생성
-    kr_holidays = holidays.KR()
+    # ---------------------------------------------------------
+    # 2. 타겟 생성: 오늘~미래 환자 수 -> 1만 명당 비율 변환
+    # ---------------------------------------------------------
+    for i in range(4):
+        cnt_col = f'{disease_type}_CNT_D0' if i == 0 else f'{disease_type}_CNT_D_PLUS_{i}'
+        ratio_col = f'{disease_type}_RATIO_D{i}'
+        df_feat[ratio_col] = (df_feat[cnt_col] / df_feat['POP_TOTAL']) * 10000
 
-    # [3-1] 한국 공휴일 및 휴일 특징 생성
-    kr_holidays = holidays.KR()
-    df_feat['IS_HOLIDAY'] = df_feat['MEASURE_DATE'].apply(lambda x: 1 if x in kr_holidays else 0)
-    df_feat['IS_WEEKEND'] = pd.to_datetime(df_feat['MEASURE_DATE']).dt.dayofweek.isin([5, 6]).astype(int)
-    df_feat['AFTER_HOLIDAY'] = (df_feat['IS_HOLIDAY'].shift(1).fillna(0).astype(int) |
-                                df_feat['IS_WEEKEND'].shift(1).fillna(0).astype(int))
+    # ---------------------------------------------------------
+    # 3. 미래 휴일 피처 생성 (D1~D3)
+    # ---------------------------------------------------------
+    for i in range(1, 4):
+        target_date = df_feat['MEASURE_DATE'] + pd.Timedelta(days=i)
+        prev_to_target = target_date - pd.Timedelta(days=1)
 
-    # 타 질병 과거치는 모델 혼선을 위해 제거
-    other_disease_prev_cols = [col for col in all_prev_cols if disease_type.upper() not in col]
+        df_feat[f'IS_HOLIDAY_D{i}'] = ((target_date.dt.weekday == 6) | (target_date.isin(kr_holidays))).astype(int)
+        df_feat[f'AFTER_HOLIDAY_D{i}'] = ((prev_to_target.dt.weekday == 6) | (prev_to_target.isin(kr_holidays))).astype(
+            int)
 
-    drop_cols = ['MEASURE_DATE', 'POP_TOTAL'] + all_target_cols + other_disease_prev_cols
-    X_final = df_feat.drop(columns=drop_cols).copy()
+    # ---------------------------------------------------------
+    # 4. 데이터셋 분리 (X, y 설정)
+    # ---------------------------------------------------------
+    target_cols = [f'{disease_type}_RATIO_D{i}' for i in range(4)]
 
-    # 범주형으로 설정
-    X_final['DIST_CODE'] = X_final['DIST_CODE'].astype('category')
-    X_final['STD_MONTH'] = X_final['STD_MONTH'].astype('category')
-    X_final['DAY_OF_WEEK'] = X_final['DAY_OF_WEEK'].astype('category')
+    # 다른 질환의 과거 데이터는 학습 피처로 유지하되(비율로 변환됨), 타겟 컬럼들은 제거
+    other_disease = 'ASTHMA' if disease_type == 'COLD' else 'COLD'
+    other_disease_cols = [c for c in df_feat.columns if c.startswith(f'{other_disease}_')]
+    all_cnt_cols = [c for c in df_feat.columns if '_CNT_' in c]
+    all_ratio_cols = [c for c in df_feat.columns if '_RATIO_D' in c]
 
-    # [4] 데이터 분할 (2022년을 테스트셋으로 활용)
-    train_mask = (df['MEASURE_DATE'] >= '2015-01-01') & (df['MEASURE_DATE'] <= '2021-12-31')
-    test_mask = (df['MEASURE_DATE'] >= '2022-01-01') & (df['MEASURE_DATE'] <= '2022-12-31')
+    # 리크(Leak) 방지를 위해 타겟과 직접 연결된 CNT/RATIO 컬럼들 모두 제거
+    drop_cols = ['MEASURE_DATE', 'POP_TOTAL', 'DAY_OF_WEEK'] + \
+                all_cnt_cols + all_ratio_cols + other_disease_cols
 
-    X_train, y_train = X_final[train_mask], y_rate[train_mask]
-    X_test, y_test = X_final[test_mask], y_rate[test_mask]
+    X = df_feat.drop(columns=drop_cols)
+    y = df_feat[target_cols]
 
-    # [5] XGBoost 모델 설정 (범주형 활성화)
+    # [X 피처 리스트 출력]
+    features = list(X.columns)
+    print(f"\n🔎 [{disease_type}] 학습 피처 ({len(features)}개 / PREV 데이터 비율 변환 완료):")
+    for i, f in enumerate(features):
+        print(f"{f:<25}", end='\t' if (i + 1) % 3 != 0 else '\n')
+    print("\n" + "=" * 80)
+
+    # Train/Test 분할
+    split_idx = int(len(df_feat) * 0.8)
+    X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
+    y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
+
+    # ---------------------------------------------------------
+    # 5. 샘플 가중치 및 모델 학습
+    # ---------------------------------------------------------
+    extreme_weather_mask = (
+            (X_train['PM10_MA_72H'] > 80) |
+            (X_train['PM25_MA_72H'] > 35) |
+            (X_train['TEMP_MIN_D0'] < 0)
+    )
+    sample_weights = np.where(extreme_weather_mask, 5.0, 1.0)
+
     xgb_model = XGBRegressor(
-        n_estimators=1000,
-        learning_rate=0.02,
-        max_depth=8,
+        n_estimators=2000,
+        learning_rate=0.01,
+        max_depth=3,  # ★ 깊이를 확 낮춰서 복잡한 요일 패턴 암기 방지
+        subsample=0.7,
+        colsample_bytree=0.2,  # ★ 요일 변수가 선택될 확률을 확 줄임
+        min_child_weight=25,  # ★ 더 많은 데이터가 모여야 분기하도록 규제
+        reg_lambda=20.0,  # ★ L2 규제를 강화하여 변수 가중치를 골고루 분산
+        random_state=42,
         tree_method='hist',
         enable_categorical=True,
-        subsample=0.9,
-        colsample_bytree=0.7,
-        gamma=0.05,              # 제약을 살짝 풀어 더 세밀하게 가지를 치도록 유도
-        reg_lambda=1.5,         # L2 규제를 살짝 높여 깊이가 깊어진 만큼의 과적합 방지
-        n_jobs=-1,
-        random_state=42
+        objective='count:poisson'
     )
 
-    # [6] 시계열 교차 검증 (TimeSeriesSplit) 실행
-    # n_splits=5 는 데이터를 5개 구간으로 쪼개서 점진적으로 학습/검증을 반복함
-    if run_cv:
-        tscv = TimeSeriesSplit(n_splits=5)
-        cv_scores = []
-
-        print(f"🔄 {disease_type} 시계열 교차 검증(TimeSeriesSplit) 진행 중...")
-
-        # X_train 내부에서 인덱스를 시계열 순서대로 쪼갬
-        for i, (tr_idx, val_idx) in enumerate(tscv.split(X_train)):
-            X_cv_train, X_cv_val = X_train.iloc[tr_idx], X_train.iloc[val_idx]
-            y_cv_train, y_cv_val = y_train.iloc[tr_idx], y_train.iloc[val_idx]
-
-            target_col_d0 = y_cv_train.columns[0]
-            cv_threshold = y_cv_train[target_col_d0].quantile(0.8)
-            cv_weights = np.where(y_cv_train[target_col_d0] > cv_threshold, 2.0, 1.0)
-
-            cv_multi_model = MultiOutputRegressor(xgb_model)
-            cv_multi_model.fit(X_cv_train, y_cv_train, sample_weight=cv_weights)
-
-            cv_preds = cv_multi_model.predict(X_cv_val)
-            # 로그 복원 후 R2 계산
-            cv_r2 = r2_score(np.expm1(y_cv_val), np.expm1(cv_preds))
-            cv_scores.append(cv_r2)
-            print(f"   📍 Fold {i + 1} R2 Score: {cv_r2:.4f}")
-
-        avg_cv_r2 = np.mean(cv_scores)
-        print(f"📊 평균 교차 검증 R2 Score: {avg_cv_r2:.4f}")
-
-    # 발생률 상위 20%에 2.0배의 가중치 부여
-    target_col_d0 = y_train.columns[0]
-    threshold = y_train[target_col_d0].quantile(0.8)
-    weights = np.where(y_train[target_col_d0] > threshold, 2.0, 1.0)
-
-    # MultiOutput 래퍼 적용
     multi_model = MultiOutputRegressor(xgb_model)
-    multi_model.fit(X_train, y_train, sample_weight=weights)
+    print(f"🔥 [{disease_type}] 비율 기반 XGBoost 학습 시작...")
+    multi_model.fit(X_train, y_train, sample_weight=sample_weights)
 
-    # [7] 예측 및 복원
-    preds_log = multi_model.predict(X_test)
-    y_test_original = np.expm1(y_test)
-    preds_original = np.expm1(preds_log)
+    # 결과 평가 및 저장
+    y_pred = multi_model.predict(X_test)
+    print(f"✅ {disease_type} 학습 완료! R2: {r2_score(y_test, y_pred):.4f}")
 
-    # 평가 지표
-    mae = mean_absolute_error(y_test_original, preds_original)
-    r2 = r2_score(y_test_original, preds_original)
+    model_path = f"../../flask/air/ml/model_{disease_type.lower()}_seoul.pkl"
+    joblib.dump(multi_model, model_path)
 
-    print(f"✅ {disease_type} XGBoost 학습 완료!")
-    print(f"📈 전체 평균 R2 Score: {r2:.4f}")
-    print(f"📊 전체 평균 MAE: {mae:.4f} (명/1만명)")
-
-    # 저장할 경로 설정 (현재 폴더에서 flask 쪽으로 거슬러 올라감)
-    save_path = f"../../flask/air/models/model_{disease_type.lower()}_seoul.pkl"
-
-    # 폴더가 없으면 미리 생성 (에러 방지)
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-
-    # [8] 모델 저장 (스케일러는 필요 없음)
-    # model_filename = f'model_{disease_type.lower()}_seoul.pkl'
-    joblib.dump(multi_model, save_path)
-    print(f"💾 모델 저장 완료: {save_path}")
-
-    # 중요도 시각화용 데이터
-    first_model = multi_model.estimators_[0]
-    importances = pd.Series(first_model.feature_importances_, index=X_train.columns).sort_values(ascending=False)
-    print(f"💡 중요 변수 TOP 5:\n{importances.head(5)}")
+    # 중요도 출력
+    avg_imp = np.mean([est.feature_importances_ for est in multi_model.estimators_], axis=0)
+    print(pd.Series(avg_imp, index=features).sort_values(ascending=False).head(15))
 
     return multi_model
 
@@ -177,10 +141,10 @@ def main():
         # print(f"🧹 전처리 완료: {len(df)}행 -> {len(df_clean)}행")
 
         # 1. 감기(COLD) 4일치 모델 학습 및 저장
-        train_disease_xgb(df_clean, 'COLD', False)
+        train_disease_xgb(df_clean, 'COLD')
 
         # 2. 천식(ASTHMA) 4일치 모델 학습 및 저장
-        train_disease_xgb(df_clean, 'ASTHMA', False)
+        train_disease_xgb(df_clean, 'ASTHMA')
 
         print("\n✨ 모든 모델 학습 및 저장 작업이 완료되었습니다!")
 

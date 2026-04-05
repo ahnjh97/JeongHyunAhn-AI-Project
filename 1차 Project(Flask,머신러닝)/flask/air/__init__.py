@@ -4,6 +4,8 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
+from sqlalchemy import create_engine
+from config import SQLALCHEMY_DATABASE_URI
 
 import config
 db = SQLAlchemy()
@@ -43,6 +45,7 @@ def create_app():
         11710: ("송파구", 649759),
         11740: ("강동구", 503997)
     }
+    app.engine = create_engine(SQLALCHEMY_DATABASE_URI)
 
     base_path = os.path.dirname(os.path.abspath(__file__))
     # 로드해야 할 질병 리스트

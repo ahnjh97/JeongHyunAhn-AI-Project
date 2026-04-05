@@ -4,13 +4,14 @@ $(document).ready(function() {
     const coldChart = echarts.init(document.getElementById('forecastChart1'));
     const asthmaChart = echarts.init(document.getElementById('forecastChart2'));
 
-    // 2. 상태 관리 변수
+    // 2. 상태 관리 변수 (통합 인덱스 사용)
+    // 인덱스: 0(3일전), 1(2일전), 2(1일전), 3(오늘), 4(내일), 5(모레), 6(3일후)
     let currentDistrict = "강남구";
     let currentModel = 'cold';
-    let currentDateIndex = 3; // 오늘 인덱스
+    let currentDateIndex = 3; // 기본값: 오늘
     let seoulGeoJson = null;
 
-    // 3. Navbar 드롭다운 메뉴 채우기
+    // 3. 자치구 리스트
     const districts = ["강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구", "노원구", "도봉구", "동대문구", "동작구", "마포구", "서대문구", "서초구", "성동구", "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구"];
     const $menu = $('#districtMenu');
     if($menu.length) {
@@ -82,7 +83,7 @@ $(document).ready(function() {
                     type: 'map', map: 'seoul', roam: false,
                     nameProperty: 'SIG_KOR_NM',
                     layoutCenter: ['50%', '50%'], layoutSize: '130%',
-                    aspectScale: 0.9, selectedMode: false,
+                    aspectScale: 0.9,
                     label: {
                         show: true,
                         formatter: function(params) {
@@ -94,108 +95,98 @@ $(document).ready(function() {
                         color: '#64748b', fontWeight: '600', fontSize: 13, fontFamily: 'Pretendard'
                     },
                     itemStyle: { areaColor: '#ffffff', borderColor: '#cbd5e0', borderWidth: 0.5 },
-                    emphasis: {
-                        label: { show: true, fontWeight: '900', color: '#000000' },
-                        itemStyle: {
-                            areaColor: null,
-                            shadowBlur: 10,
-                            shadowColor: 'rgba(0, 0, 0, 0.3)'
-                        }
-                    },
-                    data: data.map(item => {
-                        const isSelected = item.name === currentDistrict;
-                        return {
-                            name: item.name,
-                            value: item.value,
-                            realRate: item.realRate,
-                            cnt: item.cnt,
-                            zlevel: isSelected ? 1 : 0,
-                            z: isSelected ? 5 : 1,
-                            itemStyle: isSelected ? {
-                                // 테두리 대신 강력한 그림자 효과로 입체감 부여
-                                shadowBlur: 20,
-                                shadowColor: 'rgba(0, 0, 0, 0.4)',
-                                shadowOffsetX: 0,
-                                shadowOffsetY: 0,
-                                areaColor: null // 원본 색상 유지
-                            } : {
-                                shadowBlur: 0,
-                                borderWidth: 0.5
-                            }
-                        };
-                    })
+                    data: data
                 }]
             };
             mapChart.setOption(option, true);
         }
     }
 
-    // 5. 데이터 연동 로직
+    // 5. 통합 데이터 가져오기 함수 (과거+현재미래 통합)
+    function getMergedData(disease, index, district) {
+        // index 0,1,2 -> prevData / index 3,4,5,6 -> rawData
+        if (index < 3) {
+            return prevData[disease][index][district] || null;
+        } else {
+            return rawData[disease][index - 3][district] || null;
+        }
+    }
+
     function updateDisplay() {
-        if (typeof rawData === 'undefined' || !rawData) return;
+        if (typeof rawData === 'undefined' || typeof prevData === 'undefined') return;
+
         const diseaseKey = currentModel === 'cold' ? '감기' : '천식';
         const seoulAvg = currentModel === 'cold' ? 62.44 : 3.6;
 
         $('#districtSelect').text(currentDistrict);
         $('#dynamicTitle').text(`서울시 자치구별 ${diseaseKey} 위험도`);
 
+        // 상단 요약 카드 업데이트 (오늘~3일후 수치)
         $('.summary-val').each(function(index) {
-            if (index === 0) return;
-            const dayIdx = index - 1;
-            const dayData = rawData[diseaseKey][dayIdx][currentDistrict];
-            if (dayData) {
-                $(this).text(`${dayData.pred_cnt}명`);
+            if (index === 0) return; // 미세먼지 패스
+            const targetIdx = index + 2; // index 1(오늘)은 전체배열의 3번 인덱스
+            const data = getMergedData(diseaseKey, targetIdx, currentDistrict);
+            if (data) {
+                $(this).text(`${data.pred_cnt}명`);
             }
         });
 
+        // 라인 차트 업데이트
         updateLineCharts();
 
-        const todayInfo = rawData[diseaseKey][currentDateIndex - 3][currentDistrict];
-        if (todayInfo) {
-            const riskRatio = (todayInfo.pred_rate / seoulAvg) * 100;
-            const level = riskRatio > 120 ? '위험' : riskRatio > 90 ? '보통' : '안전';
-            const colorClass = riskRatio > 120 ? 'text-danger' : riskRatio > 90 ? 'text-warning' : 'text-success';
-            const barClass = riskRatio > 120 ? 'bg-danger' : riskRatio > 90 ? 'bg-warning' : 'bg-success';
+        // 현재 선택된 날짜의 지도 데이터 생성
+        const targetDayObj = (currentDateIndex < 3) ? prevData[diseaseKey][currentDateIndex] : rawData[diseaseKey][currentDateIndex - 3];
 
-            $('#risk-progress-section').html(`
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between small mb-2">
-                        <span class="fw-bold">${currentDistrict} 현재</span><span class="${colorClass} fw-bold">${level} (${riskRatio.toFixed(0)}%)</span>
-                    </div>
-                    <div class="progress" style="height: 10px;"><div class="progress-bar ${barClass}" style="width: ${Math.min(riskRatio, 100)}%"></div></div>
-                </div>
-            `);
-        }
-
-        const targetObj = rawData[diseaseKey][currentDateIndex - 3];
-        const filteredData = Object.entries(targetObj).map(([distName, details]) => ({
+        const filteredData = Object.entries(targetDayObj).map(([distName, details]) => ({
             name: distName,
             value: details.pred_rate / seoulAvg,
             realRate: details.pred_rate,
-            cnt: details.pred_cnt
+            cnt: details.pred_cnt,
+            itemStyle: distName === currentDistrict ? {
+                shadowBlur: 20,
+                shadowColor: 'rgba(0, 0, 0, 0.4)',
+                areaColor: null
+            } : { shadowBlur: 0 }
         }));
 
         const values = filteredData.map(d => d.value);
         renderMap(filteredData, `${diseaseKey} 위험도`, Math.min(...values), Math.max(...values));
+
+        // 우측 체감형 지표 (선택된 날짜 기준)
+        const selectedInfo = getMergedData(diseaseKey, currentDateIndex, currentDistrict);
+        if (selectedInfo) {
+            const riskRatio = (selectedInfo.pred_rate / seoulAvg) * 100;
+            const level = riskRatio > 120 ? '위험' : riskRatio > 90 ? '보통' : '안전';
+            const colorClass = riskRatio > 120 ? 'text-danger' : riskRatio > 90 ? 'text-warning' : 'text-success';
+            const barClass = riskRatio > 120 ? 'bg-danger' : riskRatio > 90 ? 'bg-warning' : 'bg-success';
+
+            const dateLabels = ['3일전', '2일전', '1일전', '오늘', '내일', '모레', '3일후'];
+
+            $('#risk-progress-section').html(`
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span class="fw-bold">${currentDistrict} (${dateLabels[currentDateIndex]})</span>
+                        <span class="${colorClass} fw-bold">${level} (${riskRatio.toFixed(0)}%)</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar ${barClass}" style="width: ${Math.min(riskRatio, 100)}%"></div>
+                    </div>
+                </div>
+            `);
+        }
     }
 
     function updateLineCharts() {
-        // 1. 감기 데이터 추출 및 업데이트
-        const prevCold = [0, 1, 2].map(i => prevData['감기'][i][currentDistrict]?.pred_cnt || 0);
-        const nextCold = [0, 1, 2, 3].map(i => rawData['감기'][i][currentDistrict]?.pred_cnt || 0);
-        const coldFullData = prevCold.concat(nextCold);
+        const diseases = ['감기', '천식'];
+        const charts = [coldChart, asthmaChart];
 
-        coldChart.setOption({
-            series: [{ data: coldFullData }]
-        });
-
-        // 2. 천식 데이터 추출 및 업데이트
-        const prevAsthma = [0, 1, 2].map(i => prevData['천식'][i][currentDistrict]?.pred_cnt || 0);
-        const nextAsthma = [0, 1, 2, 3].map(i => rawData['천식'][i][currentDistrict]?.pred_cnt || 0);
-        const asthmaFullData = prevAsthma.concat(nextAsthma);
-
-        asthmaChart.setOption({
-            series: [{ data: asthmaFullData }]
+        diseases.forEach((dis, idx) => {
+            const fullData = [];
+            for(let i=0; i<7; i++) {
+                const d = getMergedData(dis, i, currentDistrict);
+                fullData.push(d ? d.pred_cnt : 0);
+            }
+            charts[idx].setOption({ series: [{ data: fullData }] });
         });
     }
 
@@ -219,42 +210,33 @@ $(document).ready(function() {
     $('.date-btn').on('click', function() {
         $('.date-btn').removeClass('active btn-primary');
         $(this).addClass('active btn-primary');
-        currentDateIndex = parseInt($(this).data('date'));
+        // HTML의 data-date(0~3)를 전체 인덱스(3~6)로 변환
+        currentDateIndex = parseInt($(this).data('date')) + 3;
         updateDisplay();
     });
 
-    // 7. 차트 기본 옵션 생성 (Smooth Line & Area Style 적용)
+    // 7. 차트 초기화
     function createStepOption(title, mainColor) {
         return {
             grid: { top: '15%', left: '5%', right: '10%', bottom: '15%', containLabel: true },
-            tooltip: {
-                trigger: 'axis',
-                axisPointer: { type: 'none' }
-            },
+            tooltip: { trigger: 'axis' },
             xAxis: {
                 type: 'category',
                 boundaryGap: false,
                 data: ['3일전', '2일전', '1일전', '오늘', '내일', '모레', '글피'],
-                axisLabel: { fontSize: 10, fontFamily: 'Pretendard', color: '#64748b' },
-                axisLine: { lineStyle: { color: '#e2e8f0' } }
+                axisLabel: { fontSize: 10, color: '#64748b' }
             },
-            yAxis: {
-                type: 'value',
-                splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } },
-                axisLabel: { fontSize: 10, fontFamily: 'Pretendard', color: '#64748b' }
-            },
+            yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed' } } },
             series: [{
                 name: title,
                 type: 'line',
-                smooth: true, // 곡선 적용
-                symbol: 'circle',
+                smooth: true,
                 symbolSize: 8,
-                itemStyle: { color: mainColor, borderColor: '#fff', borderWidth: 2 },
-                lineStyle: { width: 3, color: mainColor },
+                itemStyle: { color: mainColor },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: mainColor + '44' }, // 상단 투명도
-                        { offset: 1, color: mainColor + '00' }  // 하단 투명도
+                        { offset: 0, color: mainColor + '44' },
+                        { offset: 1, color: mainColor + '00' }
                     ])
                 }
             }]

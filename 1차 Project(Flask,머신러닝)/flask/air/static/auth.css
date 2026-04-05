@@ -10,6 +10,20 @@ body {
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 }
 
+.main-visual-section {
+    display: flex !important;
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: start;     /* [해결] 세로 중앙 정렬 및 자식 높이 늘어남 방지 */
+
+    min-height: 100vh;       /* 화면 전체 높이 기준 */
+    width: 100%;
+    padding: 40px 20px;      /* 상하 여백을 주어 모바일에서 바닥에 붙지 않게 함 */
+    box-sizing: border-box;
+
+    /* 배경 설정이 여기에 있다면 그대로 두시면 됩니다 */
+    padding-top: 100px !important;
+}
+
 .auth-header {
     text-align: left;       /* 모든 텍스트 왼쪽 정렬 */
     width: 100%;            /* 컨테이너 너비 확보 */

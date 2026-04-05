@@ -50,94 +50,15 @@ body {
     margin: 0;
     padding: 0;
     width: 100%;
-    min-height: 100vh;
+    height: 100%; /* 부모 높이를 명확히 100%로 고정 (main.css와 일치) */
     background:
         radial-gradient(circle at 15% 125%, rgba(14, 165, 233, 1) 0%, rgba(255, 255, 255, 0) 55%),
         radial-gradient(circle at 85% 125%, rgba(126, 34, 206, 1) 0%, rgba(255, 255, 255, 0) 55%),
         #ffffff;
-    background-attachment: fixed;
+    /* background-attachment: fixed; 를 과감히 삭제하세요 */
     background-size: cover;
-    overflow-x: hidden;
-}
-
-.main-visual-section {
-    width: 100%;
-    min-height: calc(100vh - 80px);
-    padding-top: 80px !important;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start !important;
-    align-items: center;
-    text-align: center;
-    box-sizing: border-box;
-    overflow: visible;
-    background: transparent !important;
-}
-
-/* 2. 메인 섹션: 여기서 네비게이션 바 높이(약 80px)를 처리 */
-.main-visual-section.is-main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    width: 100%;
-    min-height: calc(100vh - 80px); /* 네비바 제외 높이 */
-
-    /* [수정] 네비바 공간 확보 */
-    padding-top: 80px !important;
-    justify-content: flex-center !important;
-
-    box-sizing: border-box;
-}
-
-/* 3. 콘텐츠 래퍼: 여기서 위치를 아래로 조절 */
-.main-content-wrapper {
-    width: 100%;
-    max-width: 800px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: calc(100vh - 80px); /* 푸터를 바닥으로 보내기 위한 최소 높이 */
-
-    /* [핵심] 상단 패딩을 줘서 타이틀 덩어리를 아래로 밉니다.
-       너무 올라갔다면 이 숫자를 100px, 120px 식으로 키우세요. */
-    padding-top: 100px !important;
-
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-bottom: 40px; /* 푸터 아래 여유 공간 */
-    box-sizing: border-box;
-}
-
-/* 모바일 화면에서는 화면이 작으므로 패딩을 조금 줄여줍니다. */
-@media (max-width: 991px) {
-    .main-content-wrapper {
-        /* 모바일에서 너무 내려가 보이면 이 숫자를 줄이세요. */
-        padding-top: 60px !important;
-    }
-}
-
-/* 3. 하단 문구: 위치 고정 해제 */
-.main-footer-text {
-    /* 중복 선언된 부분을 하나로 합치고 margin-top 조정 */
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.95rem;
-    font-weight: 300;
-    margin-top: auto !important;
-    letter-spacing: -0.5px;
-    white-space: nowrap;
-    word-break: keep-all;
-    max-width: 90%;
-    margin-bottom: 30px;
-}
-
-/* 모바일 화면에서는 자연스럽게 두 줄이 되도록 처리 */
-@media (max-width: 991px) {
-    .main-footer-text {
-        white-space: normal;
-        font-size: 0.85rem;
-        margin-top: auto !important;
-    }
+    background-repeat: no-repeat;
+    overflow: hidden; /* body 자체 스크롤은 막고 container 스크롤만 허용 */
 }
 
 /* 2. 상단 그라데이션 텍스트 */
@@ -148,16 +69,6 @@ body {
     font-weight: 700;
     font-size: 1.1rem;
     margin-bottom: 1.5rem;
-}
-
-/* 3. 중앙 메인 타이틀 (검은색 큰 글씨) */
-.main-title {
-    font-weight: 800;
-    font-size: clamp(2rem, 6vw, 3.5rem); /* 반응형 글자 크기 */
-    line-height: 1.2;
-    color: #111827;
-    letter-spacing: -0px;
-    margin-bottom: 3rem;
 }
 
 /* 4. 시작하기 버튼 (그라데이션) */
@@ -246,13 +157,16 @@ body {
     width: 100%;
     z-index: 1050;
     padding: 15px 0;
+    border: none !important;
 }
 
 /* [데스크탑 992px 이상] */
 @media (min-width: 992px) {
     /* 메인 페이지: 투명 + 흰글씨 */
     .navbar-air.is-main-nav {
+        background-color: transparent !important;
         background: transparent !important;
+        box-shadow: none !important;
     }
     .navbar-air.is-main-nav .nav-link,
     .navbar-air.is-main-nav #nav-brand-text {
@@ -264,8 +178,8 @@ body {
 
     /* 메인 외 페이지: 흰배경 + 검은글씨 */
     .navbar-air.is-not-main {
-        background: white !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        background-color: white !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
     }
     .navbar-air.is-not-main .nav-link,
     .navbar-air.is-not-main #nav-brand-text {
@@ -276,16 +190,16 @@ body {
 /* [모바일 991px 이하] */
 @media (max-width: 991px) {
     .navbar-air {
-        background: white !important; /* 무조건 흰배경 */
-        padding: 5px 0 !important;   /* 더 좁게 */
-        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        background-color: white !important;
+        padding: 8px 0 !important;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1) !important;
     }
     .navbar-air #nav-brand-text,
     .navbar-air .nav-link {
-        color: #111827 !important; /* 무조건 검은글씨 */
+        color: #111827 !important;
     }
     .navbar-air .navbar-toggler-icon {
-        filter: none !important; /* 무조건 검은색 아이콘 */
+        filter: none !important;
     }
 }
 

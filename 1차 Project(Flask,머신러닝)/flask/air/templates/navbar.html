@@ -17,7 +17,7 @@
                 </button>
                 <ul class="dropdown-menu shadow border-0" id="districtMenu"
                     style="max-height: 400px; overflow-y: auto; border-radius: 12px; font-size: 0.9rem;">
-                    </ul>
+                </ul>
             </div>
         </div>
         {% endif %}
@@ -28,7 +28,7 @@
 
         <div class="collapse navbar-collapse d-none d-lg-block">
             <ul class="navbar-nav ms-auto align-items-center">
-                {% if not is_main_page %}
+                {% if request.path != '/' %}
                     {% if g.user %}
                         <li class="nav-item"><a class="nav-link nav-custom-link" href="{{ url_for('auth.logout') }}">로그아웃</a></li>
                     {% else %}
@@ -54,10 +54,10 @@
             <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/service">Service</a></li>
             <hr>
             {% if g.user %}
-                <li class="nav-item"><a class="nav-link text-danger" href="/auth/logout">로그아웃</a></li>
+                <li class="nav-item"><a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">로그아웃</a></li>
             {% else %}
-                <li class="nav-item"><a class="nav-link text-primary" href="/auth/login">로그인</a></li>
-                <li class="nav-item"><a class="btn btn-primary w-100" href="/auth/signup">회원 가입</a></li>
+                <li class="nav-item"><a class="nav-link text-primary" href="{{ url_for('auth.login') }}">로그인</a></li>
+                <li class="nav-item"><a class="btn btn-primary w-100" href="{{ url_for('auth.signup') }}">회원 가입</a></li>
             {% endif %}
         </ul>
     </div>

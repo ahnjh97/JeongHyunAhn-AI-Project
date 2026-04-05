@@ -89,7 +89,7 @@ def train_st2pr_model(disease_type='COLD', train_end_date='2024-12-31'):
     r2 = r2_score(y_test, y_pred)
 
     # 저장할 경로 설정 (현재 폴더에서 flask 쪽으로 거슬러 올라감)
-    save_path = f"../../flask/air/models/st2pr_{disease_type.lower()}.pkl"
+    save_path = f"../../flask/air/ml/st2pr_{disease_type.lower()}.pkl"
     # 폴더가 없으면 미리 생성 (에러 방지)
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
