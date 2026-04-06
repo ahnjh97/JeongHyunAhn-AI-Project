@@ -8,6 +8,8 @@ from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import TimeSeriesSplit
 from db_config import get_conn
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning)
 
 def train_disease_xgb(df_feat, disease_type):
     """
@@ -73,10 +75,10 @@ def train_disease_xgb(df_feat, disease_type):
 
     # [X 피처 리스트 출력]
     features = list(X.columns)
-    print(f"\n🔎 [{disease_type}] 학습 피처 ({len(features)}개 / PREV 데이터 비율 변환 완료):")
-    for i, f in enumerate(features):
-        print(f"{f:<25}", end='\t' if (i + 1) % 3 != 0 else '\n')
-    print("\n" + "=" * 80)
+    # print(f"\n🔎 [{disease_type}] 학습 피처 ({len(features)}개 / PREV 데이터 비율 변환 완료):")
+    # for i, f in enumerate(features):
+    #     print(f"{f:<25}", end='\t' if (i + 1) % 3 != 0 else '\n')
+    # print("\n" + "=" * 80)
 
     # Train/Test 분할
     split_idx = int(len(df_feat) * 0.8)
@@ -89,14 +91,14 @@ def train_disease_xgb(df_feat, disease_type):
     extreme_weather_mask = (
             (X_train['PM10_MA_72H'] > 80) |
             (X_train['PM25_MA_72H'] > 35) |
-            (X_train['TEMP_MIN_D0'] < 0)
+            (X_train['TEMP_DIFF_PREV_D0'] < 0)
     )
     sample_weights = np.where(extreme_weather_mask, 5.0, 1.0)
 
     xgb_model = XGBRegressor(
         n_estimators=2000,
-        learning_rate=0.01,
-        max_depth=3,  # ★ 깊이를 확 낮춰서 복잡한 요일 패턴 암기 방지
+        learning_rate=0.02,
+        max_depth=5,  # ★ 깊이를 확 낮춰서 복잡한 요일 패턴 암기 방지
         subsample=0.7,
         colsample_bytree=0.2,  # ★ 요일 변수가 선택될 확률을 확 줄임
         min_child_weight=25,  # ★ 더 많은 데이터가 모여야 분기하도록 규제
