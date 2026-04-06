@@ -8,7 +8,7 @@ import os
 import warnings
 from db_config import get_conn
 
-warnings.filterwarnings("ignore", category=UserWarning, module='pandas')
+warnings.filterwarnings("ignore", category=UserWarning)
 
 def train_st2pr_model(disease_type='COLD', train_end_date='2024-12-31'):
     """

@@ -6,8 +6,12 @@ input[type=submit], button[type=submit]{
     margin-top:10px;
 }
 
-/* 1. 기본 텍스트 폰트 설정 (아이콘 폰트와 충돌 방지) */
-body, html {
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+    margin: 0;
+    padding: 0;
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
 }
 
@@ -45,20 +49,28 @@ input, button, select, textarea, optgroup {
     border: none; /* 테두리 제거로 더 깔끔하게 */
 }
 
-/* 1. 바디 설정 수정 */
 body {
     margin: 0;
     padding: 0;
     width: 100%;
-    height: 100%; /* 부모 높이를 명확히 100%로 고정 (main.css와 일치) */
+    min-height: 100vh; /* 100% 대신 vh 사용 */
+    position: relative;
+}
+
+body::before {
+    content: "";
+    position: fixed; /* 배경을 화면에 고정 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* 콘텐츠 뒤로 보내기 */
     background:
         radial-gradient(circle at 15% 125%, rgba(14, 165, 233, 1) 0%, rgba(255, 255, 255, 0) 55%),
         radial-gradient(circle at 85% 125%, rgba(126, 34, 206, 1) 0%, rgba(255, 255, 255, 0) 55%),
         #ffffff;
-    /* background-attachment: fixed; 를 과감히 삭제하세요 */
     background-size: cover;
     background-repeat: no-repeat;
-    overflow: hidden; /* body 자체 스크롤은 막고 container 스크롤만 허용 */
 }
 
 /* 2. 상단 그라데이션 텍스트 */
@@ -154,7 +166,6 @@ body {
 .navbar-air {
     position: absolute !important;
     top: 0; left: 0; right: 0;
-    width: 100%;
     z-index: 1050;
     padding: 15px 0;
     border: none !important;
@@ -213,6 +224,22 @@ body {
     z-index: 2050 !important; /* 사이드바 바로 아래, 하지만 다른 일반 요소보다는 위 */
 }
 
+/* 1. 오프캔버스 열릴 때 body 밀림 방지 */
+body.offcanvas-active,
+body.modal-open {
+    padding-right: 0 !important;
+}
+
+/* 2. 네비바가 고정(fixed-top)되어 있다면 네비바 밀림도 방지 */
+.fixed-top, .sticky-top {
+    padding-right: 0 !important;
+}
+
+/* 3. 부트스트랩이 강제로 넣는 스타일 무력화 */
+body {
+    padding-right: 0 !important;
+}
+
 /* --- TOP 버튼 스타일 --- */
 #backToTop {
     position: fixed;
@@ -227,7 +254,7 @@ body {
     justify-content: center;
     font-size: 24px;
     border: none;
-    background: linear-gradient(135deg, #0ea5e9 0%, #7e22ce 100%);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 1) 0%, rgba(126, 34, 206, 1) 100%);
     color: white;
     transition: transform 0.3s;
 }

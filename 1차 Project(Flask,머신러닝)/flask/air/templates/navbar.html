@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-air {% if request.path == '/' %}is-main-nav{% else %}is-not-main{% endif %}">
+<nav class="navbar navbar-expand-lg navbar-air {% if request.path == '/' %}is-main-nav{% else %}is-not-main{% endif %} no-select">
     <div class="container-fluid px-lg-5">
         <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
             <img src="{{ url_for('static', filename='images/logo3.png') }}" alt="Logo" width="45" height="45" class="me-2">
@@ -43,7 +43,7 @@
     </div>
 </nav>
 
-<div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMenu" style="width: 280px;">
+<div class="offcanvas offcanvas-start no-select" tabindex="-1" id="sidebarMenu" style="width: 280px;">
     <div class="offcanvas-header border-bottom">
         <h5 class="offcanvas-title fw-bold">AIR MENU</h5>
         <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>

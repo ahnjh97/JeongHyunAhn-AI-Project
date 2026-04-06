@@ -73,15 +73,49 @@ html, body {
     visibility: visible !important;
 }
 
+/* [추가] 캐러셀 배경을 어둡게 하여 글자 가독성 확보 */
+.carousel-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 중앙은 조금 더 어둡게, 가장자리는 자연스럽게 퍼지는 그라데이션 */
+    background: radial-gradient(
+        circle at center,
+        rgba(0, 0, 0, 0.4) 0%,   /* 0.45 -> 0.3 (30% 어둡게) */
+        rgba(0, 0, 0, 0.1) 100%  /* 0.2 -> 0.1 (10% 어둡게) */
+    );
+    z-index: 10; /* 캡션(z-index: 20)보다는 아래에 위치 */
+    pointer-events: none; /* 오버레이가 마우스 클릭을 방해하지 않도록 설정 */
+}
+
+/* --- [3] 텍스트 및 타이틀 스타일 수정 --- */
 .main-title {
     font-size: clamp(2.8rem, 6vw, 4.5rem) !important;
     font-weight: 900 !important;
     line-height: 1.1;
     letter-spacing: -0.03em;
     color: #ffffff !important;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    /* [수정] 그림자를 다층으로 쌓아 글자 윤곽을 명확히 함 */
+    text-shadow:
+        0 0 15px rgba(0, 0, 0, 0.4), /* 퍼지는 그림자 */
+        0 4px 30px rgba(0, 0, 0, 0.7), /* 깊이감 */
+        -1px -1px 0 rgba(0,0,0,0.2),  /* 미세한 외곽선 효과 */
+        1px 1px 0 rgba(0,0,0,0.2);
     word-break: keep-all;
     margin-bottom: 2rem !important;
+}
+
+.custom-caption .lead {
+    font-size: 1.6rem !important;
+    font-weight: 600 !important; /* [수정] 400에서 600으로 두께 강화 */
+    letter-spacing: -0.02em;
+    color: #ffffff !important;
+    /* [수정] 리드 문구에도 강한 그림자 적용 */
+    text-shadow: 0 2px 15px rgba(0, 0, 0, 0.8);
+    opacity: 1 !important; /* [수정] 0.9에서 1로 변경하여 더 또렷하게 */
+    margin-top: 10px;
 }
 
 /* --- [4] 푸터 로직 (바닥 스냅) --- */
@@ -141,23 +175,75 @@ html, body {
 }
 
 /* --- [6] 기타 스타일 --- */
-.service-card { transition: transform 0.3s ease; border: none; }
-.service-card:hover { transform: translateY(-10px); }
-.carousel-item { background-size: cover; background-position: center; }
+.service-card {
+    /* [인증 컨테이너 스타일 그대로 이식] */
+    background: rgba(255, 255, 255, 0.2) !important; /* 20% 투명도 */
+    backdrop-filter: blur(15px) !important;          /* 배경 흐림 */
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
 
-/* 캐러셀 내부의 lead 텍스트 스타일 강화 */
-.custom-caption .lead {
-    font-size: 1.6rem !important;
-    font-weight: 400;
-    letter-spacing: -0.02em; /* 자간을 살짝 좁혀 가독성 향상 */
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* 글자 뒤에 그림자를 주어 배경과 분리 */
-    opacity: 0.9; /* 너무 쨍하지 않게 조절 */
-    margin-top: 10px;
+    /* 레이아웃 유지 */
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
+
+/* 마우스 올렸을 때 반응 (선택 사항) */
+.service-card:hover {
+    transform: translateY(-10px);
+    background: rgba(255, 255, 255, 0.5) !important; /* 살짝 더 밝아짐 */
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+.service-card h4 {
+    font-size: 1.8rem !important; /* 1.5rem에서 2rem으로 상향 */
+    letter-spacing: -0.02em;    /* 자간을 살짝 좁히면 더 세련돼 보임 */
+    margin-bottom: 1.2rem;       /* 아래 본문과의 간격 확보 */
+}
+
+.service-card p {
+    font-size: 1.1rem !important; /* 원하는 크기로 조절 (기존 small은 약 0.875rem) */
+    font-weight: 500;            /* 글씨 두께 살짝 강화 */
+    line-height: 1.5;            /* 줄 간격을 넓혀 시원하게 보임 */
+    word-break: keep-all;        /* 한글 단어 끊김 방지 */
+}
+
+.icon-circle {
+    /* 1. 원의 전체 크기 확대 (기존 60px -> 80px 예시) */
+    width: 80px;
+    height: 80px;
+
+    /* 2. 배경색 및 중앙 정렬 */
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.7) 0%, rgba(126, 34, 206, 0.7) 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem auto; /* 하단 여백(mb-3 대신) 추가 */
+
+    /* 3. 내부 아이콘(i 태그) 크기 확대 */
+    font-size: 2.5rem; /* 기존보다 훨씬 시원하게 보임 */
+
+    /* 글래스모피즘 카드와 어울리는 은은한 그림자 */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-item { background-size: cover; background-position: center; }
 
 /* 모바일 기기에서는 너무 크지 않게 조정 */
 @media (max-width: 991px) {
     .custom-caption .lead {
         font-size: 1.2rem !important;
     }
+}
+
+.no-select {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none;     /* IE 10+ */
+    user-select: none;         /* Standard */
 }

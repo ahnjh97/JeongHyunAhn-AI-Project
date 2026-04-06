@@ -48,17 +48,12 @@ def prepare_input_data(d_type):
     rows = []
 
     for dist_code, (_, pop_total) in DIST_DATA.items():
-        prev_cnts = get_prev_data_from_db(dist_code, d_type)
-
-        # 로그 없이 비율(Ratio) 계산
-        def to_ratio(cnt):
-            return (cnt / pop_total * 10000) if pop_total > 0 else 0
+        prev_rates = get_prev_data_from_db(dist_code, d_type)
 
         row = {
             'DIST_CODE': str(dist_code),
             'STD_MONTH': today.month,
             'IS_HOLIDAY': 1 if today in kr_holidays or today.weekday() == 6 else 0,
-            # (기상 데이터 생략 - 실제 API 연동 필요)
             'PM10_AVG_D0': 45.5, 'PM10_MAX_D0': 60.0, 'PM10_STREAK_D0': 5,
             'PM25_AVG_D0': 25.0, 'PM25_MAX_D0': 35.0, 'PM25_STREAK_D0': 2,
             'TEMP_AVG_D0': 14.5, 'TEMP_DIFF_D0': 10.0, 'TEMP_MIN_D0': 9.0, 'TEMP_MAX_D0': 19.0,
@@ -68,9 +63,9 @@ def prepare_input_data(d_type):
             'PM10_AVG_D3': 50.0, 'PM10_STREAK_D3': 6, 'PM25_AVG_D3': 30.0, 'PM25_STREAK_D3': 4, 'TEMP_MIN_D3': 7.5,
             'PM10_MA_72H': 42.0, 'PM25_MA_72H': 22.0,
             'POP_CHILD_RATIO': 0.10, 'POP_OLD_RATIO': 0.17, 'GRDP_PC': 45000,
-            f'{prefix}_PREV_D1': to_ratio(prev_cnts[0]),
-            f'{prefix}_PREV_D2': to_ratio(prev_cnts[1]),
-            f'{prefix}_PREV_D3': to_ratio(prev_cnts[2]),
+            f'{prefix}_PREV_D1': prev_rates[0],
+            f'{prefix}_PREV_D2': prev_rates[1],
+            f'{prefix}_PREV_D3': prev_rates[2],
         }
 
         # 미래 휴일 정보 추가
@@ -124,11 +119,11 @@ def run_actual_prediction_model(disease_type, X_live):
 
 
 def get_prev_data_from_db(dist_code, d_type):
-    """DB에서 해당 구의 최근 3일치 환자수를 가져옴 (KeyError: 'MEASURE_DATE' 해결 버전)"""
+    """DB에서 최근 3일치 환자수 비율을 가져와 실수형 리스트로 반환"""
     table_name = "PRED_PATIENT_RATE_COLD" if d_type == '감기' else "PRED_PATIENT_RATE_ASTHMA"
 
     query = f"""
-            SELECT PRED_CNT, MEASURE_DATE
+            SELECT PRED_RATE, MEASURE_DATE
             FROM {table_name} 
             WHERE DISTRICT_CODE = :dist_code 
               AND MEASURE_DATE >= TRUNC(SYSDATE) - 3
@@ -136,33 +131,34 @@ def get_prev_data_from_db(dist_code, d_type):
             ORDER BY MEASURE_DATE DESC
         """
 
+    # 초기값을 반드시 실수형(0.0)으로 설정하여 타입 오염 방지
+    result = [0.0, 0.0, 0.0]
+    today = date.today()
+    df_prev = pd.DataFrame() # 빈 데이터프레임 초기화
+
     try:
         with current_app.engine.connect() as conn:
             result_proxy = conn.execute(text(query), {"dist_code": str(dist_code)})
-            # 1. 데이터를 리스트 형태로 모두 가져옴
             rows = result_proxy.fetchall()
-
-            # 2. 데이터프레임 생성 시 컬럼명을 직접 명시 (대소문자 문제 원천 차단)
-            df_prev = pd.DataFrame(rows, columns=['PRED_CNT', 'MEASURE_DATE'])
-
+            # 컬럼명을 명시하여 생성
+            df_prev = pd.DataFrame(rows, columns=['PRED_RATE', 'MEASURE_DATE'])
     except Exception as e:
         print(f"   ⚠️ 과거 데이터 쿼리 실패 (구코드 {dist_code}): {e}")
-        return [0, 0, 0]
+        return result # [0.0, 0.0, 0.0] 반환
 
-    result = [0, 0, 0]  # [D-1, D-2, D-3]
-    today = date.today()
-
-    # 데이터가 비어있지 않은지 확인 후 처리
     if not df_prev.empty:
         for _, row in df_prev.iterrows():
-            # DB 컬럼명과 일치하게 대문자로 접근
             m_date = row['MEASURE_DATE']
+            # PRED_RATE가 None일 경우를 대비해 float 변환 및 결측치 처리
+            try:
+                rate = float(row['PRED_RATE']) if row['PRED_RATE'] is not None else 0.0
+            except:
+                rate = 0.0
 
-            # Oracle 날짜 타입이 datetime 객체인지 확인 후 처리
             if hasattr(m_date, 'date'):
                 diff = (today - m_date.date()).days
                 if 1 <= diff <= 3:
-                    result[diff - 1] = row['PRED_CNT']
+                    result[diff - 1] = rate
 
     return result
 
