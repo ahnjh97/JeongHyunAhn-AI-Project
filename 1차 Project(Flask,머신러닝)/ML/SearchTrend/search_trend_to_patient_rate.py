@@ -5,7 +5,10 @@ from sklearn.metrics import r2_score
 import joblib
 import holidays
 import os
+import warnings
 from db_config import get_conn
+
+warnings.filterwarnings("ignore", category=UserWarning, module='pandas')
 
 def train_st2pr_model(disease_type='COLD', train_end_date='2024-12-31'):
     """
@@ -29,29 +32,22 @@ def train_st2pr_model(disease_type='COLD', train_end_date='2024-12-31'):
 
     # 2. [가장 중요] 타겟 컬럼을 먼저 생성해야 합니다!
     target_cnt_col = f'{disease_type.upper()}_CNT_D0'
-    df[target_col] = np.log1p((df[target_cnt_col] / df['POP_TOTAL'].replace(0, np.nan)) * 10000)
+    df[target_col] = (df[target_cnt_col] / df['POP_TOTAL'].replace(0, np.nan)) * 10000
     df[target_col] = df[target_col].fillna(0)  # 결측치 방어
-
-    # 3. 학습 변수 선택 (순수 변환 모델)
-    features = [
-        search_col,  # 오늘의 검색어 (핵심)
-        'MONTH',  # 계절성
-        'DIST_CODE',  # 지역적 특성
-        'DAY_OF_WEEK'
-    ]
 
     # 한국 공휴일 객체 생성
     kr_holidays = holidays.KR()
 
     # 공휴일 피처 생성 (공휴일이면 1, 아니면 0)
     df['IS_HOLIDAY'] = df['MEASURE_DATE'].apply(lambda x: 1 if x in kr_holidays else 0)
-
-    # 주말 여부 피처 생성 (토/일이면 1, 아니면 0)
-    # DAY_OF_WEEK가 있어도 이렇게 '이진(Binary)'으로 떠먹여 주면 모델이 훨씬 잘 배웁니다.
-    df['IS_WEEKEND'] = pd.to_datetime(df['MEASURE_DATE']).dt.dayofweek.isin([5, 6]).astype(int)
+    df['IS_SATURDAY'] = (df['MEASURE_DATE'].dt.dayofweek == 5).astype(int)
+    df['IS_SUNDAY'] = (df['MEASURE_DATE'].dt.dayofweek == 6).astype(int)
 
     # 학습 변수에 추가
-    features.extend(['IS_HOLIDAY', 'IS_WEEKEND'])
+    features = [
+        search_col, 'MONTH', 'DIST_CODE', 'DAY_OF_WEEK',
+        'IS_HOLIDAY', 'IS_SATURDAY', 'IS_SUNDAY'
+    ]
 
     # 결측치 제거 (Shift로 인한 것)
     df = df.dropna(subset=features)

@@ -5,9 +5,8 @@ import holidays
 import oracledb
 import warnings
 from datetime import date, timedelta
-from flask import current_app
 from sqlalchemy import text
-from air.db_config import get_conn
+from flask import current_app
 
 # 1. Pandas Warning 차단 (SQLAlchemy 사용 권고 메시지 등)
 warnings.filterwarnings("ignore", category=UserWarning, module='pandas')
@@ -168,32 +167,44 @@ def get_prev_data_from_db(dist_code, d_type):
     return result
 
 def save_to_model_outputs(d_type, day, predictions):
-    conn = None
-    cursor = None
     try:
-        conn = get_conn()  # 직접 커서가 필요한 INSERT/DELETE는 기존 get_conn() 유지
-        cursor = conn.cursor()
+        # 1. SQLAlchemy Engine을 통해 커넥션 획득
+        with current_app.engine.connect() as conn:
 
-        delete_sql = "DELETE FROM MODEL_OUTPUTS WHERE DISEASE_TYPE = :1 AND PRED_DATE = :2"
-        cursor.execute(delete_sql, [d_type, int(day)])
+            # 2. 기존 데이터 삭제 (DELETE)
+            # :d_type, :p_day 로 바인딩 변수 이름 지정
+            delete_sql = text("DELETE FROM MODEL_OUTPUTS WHERE DISEASE_TYPE = :d_type AND PRED_DATE = :p_day")
+            conn.execute(delete_sql, {"d_type": d_type, "p_day": int(day)})
 
-        insert_sql = """
-                     INSERT INTO MODEL_OUTPUTS
-                     (DIST_CODE, DISEASE_TYPE, PRED_DATE, DIST_NAME, PRED_RATE, PRED_CNT, CREATED_AT)
-                     VALUES (:1, :2, :3, :4, :5, :6, SYSDATE) \
-                     """
+            # 3. 새로운 데이터 삽입 (INSERT)
+            insert_sql = text("""
+                INSERT INTO MODEL_OUTPUTS
+                (DIST_CODE, DISEASE_TYPE, PRED_DATE, DIST_NAME, PRED_RATE, PRED_CNT, CREATED_AT)
+                VALUES (:dist_code, :d_type, :p_day, :dist_name, :p_rate, :p_cnt, SYSDATE)
+            """)
 
-        bind_data = [(str(p['dist_code']), d_type, int(day), p['dist_name'], p['rate'], p['cnt']) for p in predictions]
-        cursor.executemany(insert_sql, bind_data)
-        conn.commit()
-        print(f"✅ [DB 적재 완료] {d_type} | Day Index: {day} | {len(bind_data)}건")
+            # 4. 튜플 리스트 대신 딕셔너리 리스트 생성 (executemany 대응)
+            bind_data = [
+                {
+                    "dist_code": str(p['dist_code']),
+                    "d_type": d_type,
+                    "p_day": int(day),
+                    "dist_name": p['dist_name'],
+                    "p_rate": p['rate'],
+                    "p_cnt": p['cnt']
+                } for p in predictions
+            ]
+
+            # 5. 리스트를 인자로 전달하여 일괄 실행
+            conn.execute(insert_sql, bind_data)
+
+            # 6. 변경 사항 확정
+            conn.commit()
+
+            print(f"✅ [DB 적재 완료] {d_type} | Day Index: {day} | {len(bind_data)}건")
 
     except Exception as e:
         print(f"   ❌ DB 적재 에러: {e}")
-        if conn: conn.rollback()
-    finally:
-        if cursor: cursor.close()
-        if conn: conn.close()
 
 def main(target_disease=None):
     diseases = [target_disease] if target_disease else ['감기', '천식']

@@ -147,7 +147,7 @@ html, body {
 
 /* 캐러셀 내부의 lead 텍스트 스타일 강화 */
 .custom-caption .lead {
-    font-size: 1.6rem !important; /* 기본보다 약 1.2배 키움 */
+    font-size: 1.6rem !important;
     font-weight: 400;
     letter-spacing: -0.02em; /* 자간을 살짝 좁혀 가독성 향상 */
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* 글자 뒤에 그림자를 주어 배경과 분리 */

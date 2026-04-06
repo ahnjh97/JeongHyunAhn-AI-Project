@@ -6,8 +6,13 @@ import joblib
 import numpy as np
 import holidays
 import os
-from air.db_config import get_conn
+import warnings
 from datetime import datetime, timedelta
+from flask import current_app
+from sqlalchemy import text
+
+# 1. Pandas Warning 차단 (SQLAlchemy 사용 권고 메시지 등)
+warnings.filterwarnings("ignore", category=UserWarning, module='pandas')
 
 # 1. 네이버에서 발급받은 키 입력
 CLIENT_ID = "9d2gDiBXHXg0_x5PeSS2"
@@ -103,28 +108,44 @@ def get_anchored_daily_data(target_start, target_end, anchor_date, group_name, k
     return None
 
 def upsert_to_db(df, table_name):
-    if df is None or df.empty: return
-    conn = get_conn()
-    cursor = conn.cursor()
-    try:
-        # Oracle의 MERGE 문을 사용하여 중복 방지 및 업데이트 (Upsert)
-        rows = [(row['period'].strftime('%Y-%m-%d'), row['ratio']) for _, row in df.iterrows()]
-        sql = f"""
-            MERGE INTO {table_name} t
-            USING (SELECT TO_DATE(:1, 'YYYY-MM-DD') as m_date, :2 as s_idx FROM dual) s
-            ON (t.MEASURE_DATE = s.m_date)
-            WHEN MATCHED THEN
-                UPDATE SET t.SEARCH_INDEX = s.s_idx
-            WHEN NOT MATCHED THEN
-                INSERT (MEASURE_DATE, SEARCH_INDEX) VALUES (s.m_date, s.s_idx)
-        """
-        cursor.executemany(sql, rows)
-        conn.commit()
-        print(f"✅ {table_name} {len(df)}건 반영 완료!")
-    finally:
-        cursor.close()
-        conn.close()
+    if df is None or df.empty:
+        return
 
+    # 1. SQLAlchemy Engine에서 커넥션 획득
+    with current_app.engine.connect() as conn:
+        try:
+            # 2. 데이터를 딕셔너리 리스트로 변환 (executemany 대응)
+            # 바인딩 변수 이름(:m_date, :s_idx)과 키 이름을 맞춰줍니다.
+            rows = [
+                {
+                    "m_date": row['period'].strftime('%Y-%m-%d'),
+                    "s_idx": float(row['ratio'])
+                } for _, row in df.iterrows()
+            ]
+
+            # 3. SQL 문 수정 (바인딩 변수를 숫자가 아닌 이름으로 변경)
+            sql = text(f"""
+                MERGE INTO {table_name} t
+                USING (SELECT TO_DATE(:m_date, 'YYYY-MM-DD') as m_date, :s_idx as s_idx FROM dual) s
+                ON (t.MEASURE_DATE = s.m_date)
+                WHEN MATCHED THEN
+                    UPDATE SET t.SEARCH_INDEX = s.s_idx
+                WHEN NOT MATCHED THEN
+                    INSERT (MEASURE_DATE, SEARCH_INDEX) VALUES (s.m_date, s.s_idx)
+            """)
+
+            # 4. conn.execute에 리스트를 넘기면 자동으로 executemany로 동작함
+            result = conn.execute(sql, rows)
+
+            # 5. Insert/Update 후 반드시 commit
+            conn.commit()
+
+            print(f"✅ {table_name} {len(df)}건 반영 완료!")
+
+        except Exception as e:
+            print(f"❌ {table_name} 적재 중 오류 발생: {e}")
+            # 에러 발생 시 롤백 (선택 사항이나 권장)
+            conn.rollback()
 
 # 수정된 main 함수
 def main(target_disease=None):
@@ -200,92 +221,82 @@ def predict_and_upload(df_result, disease_type='cold'):
         print(f"❌ 모델 로드 실패: {model_path}")
         return
 
-    conn = get_conn()
     kr_holidays = holidays.KR()
 
-    try:
-        # 1. 자치구 정보 (DB에서 CHAR(5) 문자열로 그대로 읽어옴)
-        df_dist_base = pd.read_sql("SELECT DIST_CODE FROM DISTRICT_CODE", conn)
-        dist_categories = sorted(df_dist_base['DIST_CODE'].unique().tolist())
+    # 💡 핵심: with 문으로 단 하나의 'conn' 객체만 생성해서 끝까지 사용합니다.
+    with current_app.engine.connect() as conn:
+        try:
+            df_dist_base = pd.read_sql("SELECT DIST_CODE FROM DISTRICT_CODE", conn.connection)
+            dist_categories = sorted(df_dist_base['DIST_CODE'].unique().tolist())
 
-        for _, row in df_result.iterrows():
-            target_date_str = row['period'].strftime('%Y-%m-%d')
-            search_idx = float(row['ratio'])
-            target_dt = pd.to_datetime(target_date_str)
+            for _, row in df_result.iterrows():
+                target_date_str = row['period'].strftime('%Y-%m-%d')
+                search_idx = float(row['ratio'])
+                target_dt = pd.to_datetime(target_date_str)
 
-            df_input = df_dist_base.copy()
-            search_col_name = f"{disease_type.upper()}_SEARCH_IDX"
-            df_input[search_col_name] = search_idx
+                # --- [기존 예측 로직 시작] ---
+                df_input = df_dist_base.copy()
+                search_col_name = f"{disease_type.upper()}_SEARCH_IDX"
+                df_input[search_col_name] = search_idx
 
-            # [해결책] pd.Categorical을 사용하여 카테고리 '목록'을 학습 때와 동일하게 강제 주입
-            # 1. MONTH: 1~12까지의 범위를 가짐 (1th feature 범인 해결)
-            month_categories = pd.Index(list(range(1, 13)), dtype='int32')
-            df_input['MONTH'] = pd.Categorical([target_dt.month] * len(df_input), categories=month_categories)
+                month_categories = pd.Index(list(range(1, 13)), dtype='int32')
+                df_input['MONTH'] = pd.Categorical([target_dt.month] * len(df_input), categories=month_categories)
+                df_input['DIST_CODE'] = pd.Categorical(df_input['DIST_CODE'], categories=dist_categories)
+                dow_categories = pd.Index(list(range(0, 7)), dtype='int32')
+                df_input['DAY_OF_WEEK'] = pd.Categorical([target_dt.dayofweek] * len(df_input), categories=dow_categories)
+                df_input['IS_HOLIDAY'] = np.int32(1 if target_dt in kr_holidays else 0)
+                df_input['IS_SATURDAY'] = np.int32(1 if target_dt.dayofweek == 5 else 0)
+                df_input['IS_SUNDAY'] = np.int32(1 if target_dt.dayofweek == 6 else 0)
 
-            # 2. DIST_CODE: DB 값(문자열) 그대로 사용하되, 학습 때의 구 코드 목록을 카테고리로 지정
-            df_input['DIST_CODE'] = pd.Categorical(df_input['DIST_CODE'], categories=dist_categories)
+                features = [search_col_name, 'MONTH', 'DIST_CODE', 'DAY_OF_WEEK', 'IS_HOLIDAY', 'IS_SATURDAY', 'IS_SUNDAY']
+                X_test = df_input[features].copy()
 
-            # 3. DAY_OF_WEEK: 0~6까지의 범위를 가짐
-            dow_categories = pd.Index(list(range(0, 7)), dtype='int32')
-            df_input['DAY_OF_WEEK'] = pd.Categorical([target_dt.dayofweek] * len(df_input), categories=dow_categories)
+                df_input['PRED_RATE'] = model.predict(X_test)
+                df_input['PRED_RATE'] = df_input['PRED_RATE'].clip(lower=0)
 
-            # 수치형 피처 (학습 때 .astype(int) 였으므로 int64 유지)
-            df_input['IS_HOLIDAY'] = np.int32(1 if target_dt in kr_holidays else 0)
-            df_input['IS_WEEKEND'] = np.int32(1 if target_dt.dayofweek in [5, 6] else 0)
-
-            # 3. 피처 순서 정렬 (학습 시 features 리스트와 완벽 일치)
-            features = [search_col_name, 'MONTH', 'DIST_CODE', 'DAY_OF_WEEK', 'IS_HOLIDAY', 'IS_WEEKEND']
-
-            # .copy()를 사용하여 독립된 데이터프레임으로 만듭니다 (중요)
-            X_test = df_input[features].copy()
-
-            # 4. 예측
-            preds_log = model.predict(X_test)
-            df_input['PRED_RATE'] = np.expm1(preds_log)
-
-            # 5. 환자수(PRED_CNT) 계산 (1만 명당 기준 + 정수화)
-            def calculate_cnt(r):
-                d_code = int(r['DIST_CODE'])
-                # DIST_DATA에서 인구수(index 1) 가져오기
-                pop_info = DIST_DATA.get(d_code)
-
-                if pop_info:
-                    pop_size = pop_info[1]
-                    # 계산식: 발생률 * (인구 / 10,000)
-                    raw_cnt = float(r['PRED_RATE'] * (pop_size / 10000))
-                    # 반올림 후 정수로 변환 (예: 3.7 -> 4, 3.2 -> 3)
-                    return int(round(raw_cnt))
-                else:
-                    print(f"⚠️ 경고: {d_code}에 해당하는 인구 데이터가 없습니다.")
+                def calculate_cnt(r):
+                    d_code = int(r['DIST_CODE'])
+                    pop_info = DIST_DATA.get(d_code)
+                    if pop_info:
+                        pop_size = pop_info[1]
+                        raw_cnt = float(r['PRED_RATE'] * (pop_size / 10000))
+                        return int(round(raw_cnt))
                     return 0
 
-            df_input['PRED_CNT'] = df_input.apply(calculate_cnt, axis=1)
+                df_input['PRED_CNT'] = df_input.apply(calculate_cnt, axis=1)
+                # --- [기존 예측 로직 끝] ---
 
-            # 5. DB 저장 (MERGE) - DIST_CODE는 다시 원래 문자열로 저장
-            cursor = conn.cursor()
-            upsert_rows = [
-                (target_date_str, str(r['DIST_CODE']), float(r['PRED_RATE']), int(r['PRED_CNT']))
-                for _, r in df_input.iterrows()
-            ]
+                # 2. DB 저장 (MERGE)
+                upsert_rows = [
+                    {
+                        "m_date": target_date_str,
+                        "d_code": str(r['DIST_CODE']),
+                        "p_rate": float(r['PRED_RATE']),
+                        "p_cnt": int(r['PRED_CNT'])
+                    }
+                    for _, r in df_input.iterrows()
+                ]
 
-            merge_sql = f"""
-                MERGE INTO PRED_PATIENT_RATE_{disease_type.upper()} t
-                USING (SELECT TO_DATE(:1, 'YYYY-MM-DD') as m_date, :2 as d_code, :3 as p_rate, :4 as p_cnt FROM dual) s
-                ON (t.measure_date = s.m_date AND t.district_code = s.d_code)
-                WHEN MATCHED THEN 
-                    UPDATE SET t.pred_rate = s.p_rate, t.pred_cnt = s.p_cnt
-                WHEN NOT MATCHED THEN 
-                    INSERT (measure_date, district_code, pred_rate, pred_cnt) 
-                    VALUES (s.m_date, s.d_code, s.p_rate, s.p_cnt)
-            """
-            cursor.executemany(merge_sql, upsert_rows)
-            conn.commit()
-            cursor.close()
+                merge_sql = text(f"""
+                    MERGE INTO PRED_PATIENT_RATE_{disease_type.upper()} t
+                    USING (SELECT TO_DATE(:m_date, 'YYYY-MM-DD') as m_date, :d_code as d_code, :p_rate as p_rate, :p_cnt as p_cnt FROM dual) s
+                    ON (t.measure_date = s.m_date AND t.district_code = s.d_code)
+                    WHEN MATCHED THEN 
+                        UPDATE SET t.pred_rate = s.p_rate, t.pred_cnt = s.p_cnt
+                    WHEN NOT MATCHED THEN 
+                        INSERT (measure_date, district_code, pred_rate, pred_cnt) 
+                        VALUES (s.m_date, s.d_code, s.p_rate, s.p_cnt)
+                """)
 
-        print(f"✅ {disease_type.upper()} 예측 및 적재 완료!")
+                # 💡 conn을 그대로 사용하여 실행
+                conn.execute(merge_sql, upsert_rows)
+                conn.commit()
 
-    finally:
-        conn.close()
+            print(f"✅ {disease_type.upper()} 예측 및 적재 완료!")
+
+        except Exception as e:
+            print(f"❌ {disease_type.upper()} 처리 중 오류 발생: {e}")
+            conn.rollback()
 
 if __name__ == "__main__":
     # 직접 실행 시에는 인자 없이 호출하여 둘 다 수행
