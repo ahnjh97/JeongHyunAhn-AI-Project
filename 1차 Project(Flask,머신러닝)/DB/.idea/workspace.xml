@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f83ae56b-6701-493d-9c9b-215fd41ddda9" name="변경" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/일별 데이터/patient_cnt_daily.py" beforeDir="false" afterPath="$PROJECT_DIR$/일별 데이터/patient_cnt_daily.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ML/RandomForest/train_rf.py" beforeDir="false" afterPath="$PROJECT_DIR$/../ML/RandomForest/train_rf.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ML/execute_sql_file.py" beforeDir="false" afterPath="$PROJECT_DIR$/../ML/execute_sql_file.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,33 +41,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.age_stats_quarterly.executor&quot;: &quot;Run&quot;,
-    &quot;Python.air_quality_hourly.executor&quot;: &quot;Run&quot;,
-    &quot;Python.asthma_cnt_monthly.executor&quot;: &quot;Run&quot;,
-    &quot;Python.createTable.executor&quot;: &quot;Run&quot;,
-    &quot;Python.create_train_table.executor&quot;: &quot;Run&quot;,
-    &quot;Python.district_code.executor&quot;: &quot;Run&quot;,
-    &quot;Python.execute_sql_file.executor&quot;: &quot;Run&quot;,
-    &quot;Python.grdp_by_industry.executor&quot;: &quot;Run&quot;,
-    &quot;Python.grdp_per_capita.executor&quot;: &quot;Run&quot;,
-    &quot;Python.patient_cnt_daily.executor&quot;: &quot;Run&quot;,
-    &quot;Python.train_rf.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/JeongHyunAhn-AI-Project/1차 Project(Flask,머신러닝)/DB&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.age_stats_quarterly.executor": "Run",
+    "Python.air_quality_hourly.executor": "Run",
+    "Python.asthma_cnt_monthly.executor": "Run",
+    "Python.createTable.executor": "Run",
+    "Python.create_train_table.executor": "Run",
+    "Python.district_code.executor": "Run",
+    "Python.execute_sql_file.executor": "Run",
+    "Python.grdp_by_industry.executor": "Run",
+    "Python.grdp_per_capita.executor": "Run",
+    "Python.patient_cnt_daily.executor": "Run",
+    "Python.train_rf.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "ai.playground.ignore.import.keys.banner.in.settings": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "D:/AI Project/1차 Project(Flask,머신러닝)/DB",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\AI-Project\1차 Project(Flask,머신러닝)\DB\학습 전용\rf" />
@@ -79,7 +77,6 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.31033.139" />
         <option value="bundled-python-sdk-2653e85de345-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.31033.139" />
       </set>
     </attachedChunks>
