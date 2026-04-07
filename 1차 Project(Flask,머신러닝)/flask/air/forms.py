@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, PasswordField, SelectField
-from wtforms.validators import DataRequired, Length, EqualTo, Email
+from wtforms import StringField, TextAreaField, PasswordField, SelectField, FloatField, IntegerField
+from wtforms.validators import DataRequired, Length, EqualTo, Email, Optional, NumberRange
 
 class QuestionForm(FlaskForm):
     subject = StringField('제목', validators=[DataRequired('제목은 필수 입력 항목입니다.')])
@@ -47,3 +47,23 @@ class AccountForm(FlaskForm):
 class UserLoginForm(FlaskForm):
     username = StringField('아이디', validators=[DataRequired(), Length(min=3, max=25)])
     password = PasswordField('비밀번호', validators=[DataRequired()])
+
+class SimulationForm(FlaskForm):
+    dist_name = StringField('자치구 이름', validators=[DataRequired()])
+    disease_type = StringField('질병', validators=[DataRequired()])
+
+    # 소수점 입력이 가능한 숫자 필드 (기본값 설정 가능)
+    pm10_3avg = FloatField('PM10 3일 평균', validators=[Optional()], default=42.0)
+    pm25_3avg = FloatField('PM25 3일 평균', validators=[Optional()], default=22.0)
+
+    # 정수만 입력받고 싶을 때 (예: 과거 환자 수)
+    lag1 = IntegerField('1일 전 환자수', validators=[Optional()], default=0)
+    lag2 = IntegerField('2일 전 환자수', validators=[Optional()], default=0)
+    lag3 = IntegerField('3일 전 환자수', validators=[Optional()], default=0)
+
+    # 범위 제한이 필요한 경우 (예: 비율은 0~1 사이)
+    child_ratio = FloatField('아동 비율', validators=[NumberRange(min=0, max=50)], default=10)
+    old_ratio = FloatField('노인 비율', validators=[NumberRange(min=0, max=50)], default=17)
+
+    temp_diff = FloatField('일교차', default=0)
+    grdp_pc = IntegerField('1인당 GRDP', default=45000)

@@ -49,6 +49,26 @@ input, button, select, textarea, optgroup {
     border: none; /* 테두리 제거로 더 깔끔하게 */
 }
 
+/* 모든 파란색 버튼(btn-primary)에 공통 적용 */
+.btn-primary {
+    transition: all 0.3s ease !important; /* 부드러운 전환 효과 */
+    border: none !important;            /* 테두리 제거 */
+}
+
+/* 모든 파란색 버튼 호버 시 효과 */
+.btn-primary:hover {
+    /* 1. 화사한 하늘색 배경 */
+    background-color: #1da1f2 !important;
+    border-color: #1da1f2 !important;
+    color: white !important;
+
+    /* 2. 푸른색 계열의 그림자 효과 */
+    box-shadow: 0 4px 12px rgba(29, 161, 242, 0.4) !important;
+
+    /* 4. 링크일 경우 밑줄 방지 */
+    text-decoration: none !important;
+}
+
 body {
     margin: 0;
     padding: 0;

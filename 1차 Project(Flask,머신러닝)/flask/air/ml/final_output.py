@@ -39,7 +39,6 @@ COLD_FEATURES = [
 
 ASTHMA_FEATURES = [f if 'COLD' not in f else f.replace('COLD', 'ASTHMA') for f in COLD_FEATURES]
 
-
 def prepare_input_data(d_type):
     today = date.today()
     kr_holidays = holidays.KR()
@@ -87,7 +86,6 @@ def prepare_input_data(d_type):
 
     return X_live
 
-
 def run_actual_prediction_model(disease_type, X_live):
     eng_d_type = 'cold' if disease_type == '감기' else 'asthma'
     model = current_app.ml_models[eng_d_type]
@@ -116,7 +114,6 @@ def run_actual_prediction_model(disease_type, X_live):
         all_days_result[day] = day_preds
 
     return all_days_result
-
 
 def get_prev_data_from_db(dist_code, d_type):
     """DB에서 최근 3일치 환자수 비율을 가져와 실수형 리스트로 반환"""
@@ -213,7 +210,3 @@ def main(target_disease=None):
                 save_to_model_outputs(d_type, day, predictions)
         except Exception as e:
             print(f"  ❌ {d_type} 예측 프로세스 오류: {e}")
-
-
-if __name__ == "__main__":
-    main()

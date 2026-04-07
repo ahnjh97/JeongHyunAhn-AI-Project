@@ -4,20 +4,83 @@
 <div class="main-visual-section px-3">
     <div class="container-fluid">
         <div class="row g-3">
-
             <div class="col-12 col-lg-3 order-2 order-lg-1">
-                <div class="card p-3 mb-3">
-                    <h6 class="card-title fw-bold mb-3">감기 Multi-step 예측</h6>
-                    <div id="forecastChart1" class="side-chart"></div>
-                </div>
-                <div class="card p-3">
-                    <h6 class="card-title fw-bold mb-3">천식 Multi-step 예측</h6>
-                    <div id="forecastChart2" class="side-chart"></div>
+                <div class="card p-3 shadow-sm border-0 mb-2">
+                    <h6 class="card-title fw-bold mb-2 text-center fs-5">⚙️ 시뮬레이션 변수</h6>
+                    <form id="predictionForm" class="text-center">
+                        {{ form.csrf_token }}
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold mb-0" for="pm10">미세먼지(3일평균)</label>
+                                <input type="range" class="form-range" id="pm10_range" min="0" max="300" value="75">
+                                <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="pm10" name="pm10_3avg" value="75">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold mb-0" for="pm25">초미세먼지(3일평균)</label>
+                                <input type="range" class="form-range" id="pm25_range" min="0" max="150" value="35">
+                                <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="pm25" name="pm25_3avg" value="35">
+                            </div>
+                        </div>
+
+                        <hr class="my-1">
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold mb-0" for="lag1">1일 전 환자</label>
+                                <input type="range" class="form-range" id="lag1_range" min="0" max="10000" value="120">
+                                <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="lag1" name="lag1" value="120">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold mb-0" for="lag2">2일 전 환자</label>
+                                <input type="range" class="form-range" id="lag2_range" min="0" max="10000" value="115">
+                                <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="lag2" name="lag2" value="115">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold mb-0" for="lag3">3일 전 환자</label>
+                                <input type="range" class="form-range" id="lag3_range" min="0" max="10000" value="110">
+                                <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="lag3" name="lag3" value="110">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold mb-0" for="temp_diff">전날 대비 기온</label>
+                                <input type="range" class="form-range" id="temp_diff_range" min="-10" max="10" step="0.1" value="0">
+                                <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="temp_diff" name="temp_diff" value="0">
+                            </div>
+                        </div>
+
+                        <hr class="my-1">
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="small fw-bold mb-0" for="child_ratio">어린이 비율(%)</label>
+                                <input type="range" class="form-range" id="child_range" min="0" max="50" step="1" value="10">
+                                <input type="number" step="0.1" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="child_ratio" name="child_ratio" value="10">
+                            </div>
+                            <div class="col-6">
+                                <label class="small fw-bold mb-0" for="old_ratio">노인 비율(%)</label>
+                                <input type="range" class="form-range" id="old_range" min="0" max="50" step="1" value="17">
+                                <input type="number" step="0.1" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="old_ratio" name="old_ratio" value="17">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="small fw-bold mb-0" for="grdp_pc">1인당 지역내총생산</label>
+                                <input type="range" class="form-range" id="grdp_range" min="0" max="600000" value="50000">
+                                <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="grdp_pc" name="grdp_pc" value="50000">
+                            </div>
+                        </div>
+                        <button type="button" id="predictBtn" class="btn btn-primary w-100 fw-bold py-2">
+                            ✨ 예측 결과 반영
+                        </button>
+                    </form>
                 </div>
             </div>
 
             <div class="col-12 col-lg-6 order-1 order-lg-2">
-                <div class="row g-2 mb-4 text-center">
+                <div class="row g-2 mb-3 text-center">
                     <div class="col"><div class="card p-2 py-3 summary-card-item"><small class="text-muted">미세먼지</small><span class="summary-val">75</span></div></div>
                     <div class="col"><div class="card p-2 py-3 summary-card-item"><small class="text-muted">오늘</small><span class="summary-val status-mid">145명</span></div></div>
                     <div class="col"><div class="card p-2 py-3 summary-card-item"><small class="text-muted">내일</small><span class="summary-val status-high">167명</span></div></div>
@@ -25,7 +88,7 @@
                     <div class="col"><div class="card p-2 py-3 summary-card-item"><small class="text-muted">3일 후</small><span class="summary-val status-very-high">195명</span></div></div>
                 </div>
 
-                <div class="card p-3 shadow-sm border-0">
+                <div class="card p-3 pb-0 shadow-sm border-0 mb-0">
                     <div class="w-100 text-center mb-2">
                         <h4 id="dynamicTitle" class="card-title mb-0 fw-bolder" style="font-size: 1.6rem; letter-spacing: -1px; color: #1e293b;">
                             서울시 자치구별 감기 위험도
@@ -50,31 +113,25 @@
                             </div>
                         </div>
 
-                        <div id="map" class="custom-map-height" style="width:100%; border-radius: 12px;"></div>
+                        <div id="map" class="custom-map-height"
+                             style="width:100%; border-radius: 12px; overflow: hidden; position: relative; z-index: 1;">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-12 col-lg-3 order-3 order-lg-3">
-                <div class="card p-4 mb-3">
-                    <h6 class="card-title fw-bold">⏰ 시차 반영 체감형 지표</h6>
-                    <div id="risk-progress-section">
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between small mb-2">
-                                <span class="fw-bold">현재 위험도</span><span class="status-mid fw-bold">보통 (45%)</span>
-                            </div>
-                            <div class="progress" style="height: 10px;"><div class="progress-bar bg-warning" style="width: 45%"></div></div>
-                        </div>
+            <div class="col-12 col-lg-3 order-3">
+                <div class="card p-3 mb-3 shadow-sm border-0">
+                    <h6 id="chartTitle" class="card-title fw-bold mb-3 fs-5 text-center">감기 Multi-step 예측</h6>
+                    <div style="height: 280px;">
+                        <canvas id="forecastChart"></canvas>
                     </div>
                 </div>
 
-                <div class="card p-4 rule-card">
-                    <h6 class="card-title border-0 mb-3 fw-bold">🛡️ 고위험군 행동 수칙</h6>
-                    <div class="small lh-lg">
-                        <div class="d-flex mb-3"><span>⚠️</span><span class="ms-2">호흡기 질환자 및 노약자는 외출 자제</span></div>
-                        <div class="d-flex mb-3"><span>😷</span><span class="ms-2">외출 시 반드시 마스크 착용 필수</span></div>
-                        <div class="d-flex"><span>💧</span><span class="ms-2">충분한 수분 섭취 및 실내 환기 유의</span></div>
-                    </div>
+                <div class="card p-4 mb-3 shadow-sm border-0">
+                    <h6 class="card-title fw-bold text-center fs-5">⏰ 시차 반영 체감형 지표</h6>
+                    <div id="risk-progress-section">
+                        </div>
                 </div>
             </div>
 
@@ -84,12 +141,11 @@
 {% endblock %}
 
 {% block script %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <script>
-    // 텍스트로 넘어온 데이터를 실제 JS 객체로 변환 (JSON.parse 추가)
     const rawData = JSON.parse('{{ map_data | safe }}');
-    const prevData = JSON.parse('{{ chart_data | safe }}');   // 과거 데이터 (3일)
+    const prevData = JSON.parse('{{ chart_data | safe }}');
 </script>
 <script src="{{ url_for('static', filename='js/service.js') }}"></script>
-<script src="{{ url_for('static', filename='js/scroll.js') }}"></script>
 {% endblock %}

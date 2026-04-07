@@ -1,27 +1,92 @@
+// 페이지 로드 시 자치구 리스트 채우기
+function initializeDistrictMenu() {
+    const districts = [
+        "강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구",
+        "노원구", "도봉구", "동대문구", "동작구", "마포구", "서대문구", "서초구", "성동구",
+        "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구"
+    ];
+
+    const $menu = $('#districtMenu');
+    $menu.empty(); // 기존 내용 삭제
+
+    districts.forEach(dist => {
+        $menu.append(`<li><a class="dropdown-item district-item" href="#">${dist}</a></li>`);
+    });
+}
+
+// 질병 타입(감기/천식) 변경 이벤트 리스너
+$('input[name="modelType"]').on('change', function() {
+    const selectedModel = $(this).val(); // 'cold' 또는 'asthma'
+    applySliderSettings(selectedModel);
+});
+
+function applySliderSettings(mode) {
+    const isCold = (mode === 'cold');
+
+    // 1. 질병별 설정값 정의
+    const config = {
+        max: isCold ? 10000 : 1000,   // 감기 최대 10,000 / 천식 최대 1,000 (10단위 조절용)
+        step: isCold ? 100 : 10,      // 감기 100단위 / 천식 10단위
+        defaultVal: isCold ? 2500 : 150 // 초기 권장값
+    };
+
+    // 2. 대상 슬라이더들 (lag1, lag2, lag3) 루프 처리
+    for (let i = 1; i <= 3; i++) {
+        const rangeEl = $(`#lag${i}_range`);
+        const inputEl = $(`#lag${i}`);
+
+        // 속성 및 값 변경
+        rangeEl.attr({
+            'max': config.max,
+            'step': config.step
+        }).val(config.defaultVal);
+
+        inputEl.val(config.defaultVal);
+    }
+
+    console.log(`${isCold ? '감기(100단위)' : '천식(10단위)'} 설정 적용 완료`);
+}
+
 $(document).ready(function() {
     // 1. 차트 인스턴스 초기화
     const mapChart = echarts.init(document.getElementById('map'));
-    const coldChart = echarts.init(document.getElementById('forecastChart1'));
-    const asthmaChart = echarts.init(document.getElementById('forecastChart2'));
 
-    // 2. 상태 관리 변수 (통합 인덱스 사용)
-    // 인덱스: 0(3일전), 1(2일전), 2(1일전), 3(오늘), 4(내일), 5(모레), 6(3일후)
+    const ctx = document.getElementById('forecastChart').getContext('2d');
+    let forecastChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['3일전', '2일전', '1일전', '오늘', '내일', '모레', '3일후'],
+            datasets: [{
+                label: '환자수',
+                data: [],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: false }, x: { grid: { display: false } } }
+        }
+    });
+
+    // 시뮬레이션 변수들
+    const initialMode = $('input[name="modelType"]:checked').val() || 'cold';
+
+    // 2. 상태 관리 변수 (원본 유지)
     let currentDistrict = "강남구";
     let currentModel = 'cold';
-    let currentDateIndex = 3; // 기본값: 오늘
+    let currentDateIndex = 3;
     let seoulGeoJson = null;
 
-    // 3. 자치구 리스트
-    const districts = ["강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구", "노원구", "도봉구", "동대문구", "동작구", "마포구", "서대문구", "서초구", "성동구", "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구"];
-    const $menu = $('#districtMenu');
-    if($menu.length) {
-        $menu.empty();
-        districts.forEach(d => {
-            $menu.append(`<li><a class="dropdown-item district-option" style="cursor:pointer;">${d}</a></li>`);
-        });
-    }
+    // 3. 변수 동기화
+    $('input[type="range"]').on('input', function() { $(this).next('input').val($(this).val()); });
+    $('input[type="number"]').on('input', function() { $(this).prev('input[type="range"]').val($(this).val()); });
 
-    // 4. 지도 렌더링 함수
+    // 4. [중요] 지도 렌더링 함수 (사용자가 준 원본 코드 그대로 복구)
     function renderMap(mapData, statusLabel, mapMin, mapMax) {
         if (seoulGeoJson) {
             drawChart(mapData, statusLabel);
@@ -64,7 +129,7 @@ $(document).ready(function() {
                     },
                     text: ['높음', '낮음'],
                     textStyle: { fontFamily: 'Pretendard', fontSize: 11, color: '#64748b' },
-                    formatter: function(value) { return (value * 100).toFixed(0) + '%'; }
+                    formatter: function(value) { return (value * 100).toFixed(0) + '%'; },
                 },
                 graphic: [{
                     type: 'text',
@@ -82,7 +147,7 @@ $(document).ready(function() {
                     name: '서울시 위험도',
                     type: 'map', map: 'seoul', roam: false,
                     nameProperty: 'SIG_KOR_NM',
-                    layoutCenter: ['50%', '50%'], layoutSize: '130%',
+                    layoutCenter: ['48%', '50%'], layoutSize: '130%',
                     aspectScale: 0.9,
                     label: {
                         show: true,
@@ -102,14 +167,10 @@ $(document).ready(function() {
         }
     }
 
-    // 5. 통합 데이터 가져오기 함수 (과거+현재미래 통합)
+    // 5. 통합 데이터 로직 (원본 유지)
     function getMergedData(disease, index, district) {
-        // index 0,1,2 -> prevData / index 3,4,5,6 -> rawData
-        if (index < 3) {
-            return prevData[disease][index][district] || null;
-        } else {
-            return rawData[disease][index - 3][district] || null;
-        }
+        if (index < 3) return prevData[disease][index][district] || null;
+        return rawData[disease][index - 3][district] || null;
     }
 
     function updateDisplay() {
@@ -118,41 +179,43 @@ $(document).ready(function() {
         const diseaseKey = currentModel === 'cold' ? '감기' : '천식';
         const seoulAvg = currentModel === 'cold' ? 62.44 : 3.6;
 
-        $('#districtSelect').text(currentDistrict);
+        // 텍스트/라벨 동기화
         $('#dynamicTitle').text(`서울시 자치구별 ${diseaseKey} 위험도`);
+        $('#chartTitle').text(`${diseaseKey} Multi-step 예측`);
+        $('#label_lag1').text(`1일 전 ${diseaseKey} 환자`);
+        $('#label_lag2').text(`2일 전 ${diseaseKey} 환자`);
+        $('#label_lag3').text(`3일 전 ${diseaseKey} 환자`);
 
-        // 상단 요약 카드 업데이트 (오늘~3일후 수치)
-        $('.summary-val').each(function(index) {
-            if (index === 0) return; // 미세먼지 패스
-            const targetIdx = index + 2; // index 1(오늘)은 전체배열의 3번 인덱스
-            const data = getMergedData(diseaseKey, targetIdx, currentDistrict);
-            if (data) {
-                $(this).text(`${data.pred_cnt}명`);
-            }
-        });
+        // 상단 카드 & Chart.js 데이터 수집
+        const chartValues = [];
+        for(let i=0; i<7; i++) {
+            const d = getMergedData(diseaseKey, i, currentDistrict);
+            const val = d ? d.pred_cnt : 0;
+            chartValues.push(val);
+            if (i >= 3) $(`.summary-val:eq(${i-2})`).text(`${val}명`);
+        }
 
-        // 라인 차트 업데이트
-        updateLineCharts();
+        // Chart.js 갱신
+        const mainColor = currentModel === 'cold' ? '#3b82f6' : '#f59e0b';
+        forecastChart.data.datasets[0].data = chartValues;
+        forecastChart.data.datasets[0].borderColor = mainColor;
+        forecastChart.data.datasets[0].backgroundColor = mainColor + '22';
+        forecastChart.update();
 
-        // 현재 선택된 날짜의 지도 데이터 생성
+        // [중요] 지도 데이터 생성 및 원본 renderMap 호출
         const targetDayObj = (currentDateIndex < 3) ? prevData[diseaseKey][currentDateIndex] : rawData[diseaseKey][currentDateIndex - 3];
-
         const filteredData = Object.entries(targetDayObj).map(([distName, details]) => ({
             name: distName,
             value: details.pred_rate / seoulAvg,
             realRate: details.pred_rate,
             cnt: details.pred_cnt,
-            itemStyle: distName === currentDistrict ? {
-                shadowBlur: 20,
-                shadowColor: 'rgba(0, 0, 0, 0.4)',
-                areaColor: null
-            } : { shadowBlur: 0 }
+            itemStyle: distName === currentDistrict ? { shadowBlur: 5, shadowColor: 'rgba(0, 0, 0, 0.4)', areaColor: null } : { shadowBlur: 0 }
         }));
 
         const values = filteredData.map(d => d.value);
         renderMap(filteredData, `${diseaseKey} 위험도`, Math.min(...values), Math.max(...values));
 
-        // 우측 체감형 지표 (선택된 날짜 기준)
+        // 우측 체감형 지표
         const selectedInfo = getMergedData(diseaseKey, currentDateIndex, currentDistrict);
         if (selectedInfo) {
             const riskRatio = (selectedInfo.pred_rate / seoulAvg) * 100;
@@ -160,12 +223,10 @@ $(document).ready(function() {
             const colorClass = riskRatio > 120 ? 'text-danger' : riskRatio > 90 ? 'text-warning' : 'text-success';
             const barClass = riskRatio > 120 ? 'bg-danger' : riskRatio > 90 ? 'bg-warning' : 'bg-success';
 
-            const dateLabels = ['3일전', '2일전', '1일전', '오늘', '내일', '모레', '3일후'];
-
             $('#risk-progress-section').html(`
                 <div class="mb-4">
                     <div class="d-flex justify-content-between small mb-2">
-                        <span class="fw-bold">${currentDistrict} (${dateLabels[currentDateIndex]})</span>
+                        <span class="fw-bold">${currentDistrict}</span>
                         <span class="${colorClass} fw-bold">${level} (${riskRatio.toFixed(0)}%)</span>
                     </div>
                     <div class="progress" style="height: 10px;">
@@ -176,79 +237,89 @@ $(document).ready(function() {
         }
     }
 
-    function updateLineCharts() {
-        const diseases = ['감기', '천식'];
-        const charts = [coldChart, asthmaChart];
+    // 6. 이벤트 핸들러 (원본 유지)
+    // 지도 클릭 시 구 선택 변경
+    mapChart.on('click', p => {
+        currentDistrict = p.name; // 전역 변수 업데이트
 
-        diseases.forEach((dis, idx) => {
-            const fullData = [];
-            for(let i=0; i<7; i++) {
-                const d = getMergedData(dis, i, currentDistrict);
-                fullData.push(d ? d.pred_cnt : 0);
-            }
-            charts[idx].setOption({ series: [{ data: fullData }] });
-        });
-    }
+        // [추가] 드롭다운 버튼 텍스트도 클릭한 구 이름으로 변경
+        $('#districtSelect').text(p.name);
 
-    // 6. 이벤트 리스너
-    mapChart.on('click', function(params) {
-        currentDistrict = params.name;
-        updateDisplay();
+        updateDisplay(); // 차트 및 상세 지표 갱신
+        console.log(`지도 클릭으로 구 선택: ${p.name}`);
     });
-
-    $(document).on('click', '.district-option', function(e) {
-        e.preventDefault();
-        currentDistrict = $(this).text().trim();
-        updateDisplay();
-    });
-
-    $('input[name="modelType"]').on('change', function() {
-        currentModel = $(this).val();
-        updateDisplay();
-    });
-
+    $('input[name="modelType"]').on('change', function() { currentModel = $(this).val(); updateDisplay(); });
     $('.date-btn').on('click', function() {
         $('.date-btn').removeClass('active btn-primary');
         $(this).addClass('active btn-primary');
-        // HTML의 data-date(0~3)를 전체 인덱스(3~6)로 변환
         currentDateIndex = parseInt($(this).data('date')) + 3;
         updateDisplay();
     });
 
-    // 7. 차트 초기화
-    function createStepOption(title, mainColor) {
-        return {
-            grid: { top: '15%', left: '5%', right: '10%', bottom: '15%', containLabel: true },
-            tooltip: { trigger: 'axis' },
-            xAxis: {
-                type: 'category',
-                boundaryGap: false,
-                data: ['3일전', '2일전', '1일전', '오늘', '내일', '모레', '글피'],
-                axisLabel: { fontSize: 10, color: '#64748b' }
-            },
-            yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed' } } },
-            series: [{
-                name: title,
-                type: 'line',
-                smooth: true,
-                symbolSize: 8,
-                itemStyle: { color: mainColor },
-                areaStyle: {
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: mainColor + '44' },
-                        { offset: 1, color: mainColor + '00' }
-                    ])
+    // 시뮬레이션 결과 반영시키기
+    $('#predictBtn').on('click', function() {
+        const dist_name = currentDistrict; // 현재 선택된 구
+        const disease_type = currentModel;  // 현재 선택된 질병 (cold/asthma)
+
+        // 1. 폼 데이터 가져오기
+        let formElement = document.getElementById('predictionForm');
+        let formData = new FormData(formElement);
+
+        // 2. 추가 데이터 깔끔하게 append
+        formData.append('dist_name', dist_name);
+        formData.append('disease_type', disease_type);
+
+        $.ajax({
+            url: '/service/simulate',
+            type: 'POST',
+            headers: {'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')},
+            data: formData,
+            processData: false,  // 중요: 데이터를 쿼리 스트링으로 변환하지 않음
+            contentType: false,  // 중요: 브라우저가 알아서 Boundary를 설정하게 함
+            success: function(response) {
+                const diseaseKey = disease_type === 'cold' ? '감기' : '천식';
+
+                // [A] 과거 데이터 수정 (사용자가 입력한 lag값들로 해당 구 데이터만 갱신)
+                // 파이썬에서 넘겨준 input 값을 그대로 써도 되고, 여기서 직접 폼 값을 읽어도 됩니다.
+                prevData[diseaseKey][2][dist_name].pred_cnt = parseFloat($('input[name="lag1"]').val()) || 0;
+                prevData[diseaseKey][1][dist_name].pred_cnt = parseFloat($('input[name="lag2"]').val()) || 0;
+                prevData[diseaseKey][0][dist_name].pred_cnt = parseFloat($('input[name="lag3"]').val()) || 0;
+
+                // [B] 미래 데이터 수정 (서버에서 계산된 4일치 결과 반영)
+                if (response.predictions) {
+                    for (let i = 0; i < 4; i++) {
+                        rawData[diseaseKey][i][dist_name].pred_cnt = response.predictions[i].cnt;
+                        rawData[diseaseKey][i][dist_name].pred_rate = response.predictions[i].rate;
+                    }
                 }
-            }]
-        };
-    }
 
-    coldChart.setOption(createStepOption('감기 환자수', '#3b82f6'));
-    asthmaChart.setOption(createStepOption('천식 환자수', '#f59e0b'));
-
-    updateDisplay();
-
-    window.addEventListener('resize', function() {
-        mapChart.resize(); coldChart.resize(); asthmaChart.resize();
+                // [C] UI 업데이트 (차트 & 지도 갱신)
+                updateDisplay();
+                console.log(`${dist_name} 시뮬레이션 완료`);
+            }
+        });
     });
+
+    // 자치구 드롭다운 항목 클릭 이벤트
+    $(document).on('click', '.district-item', function(e) {
+        e.preventDefault(); // 페이지 최상단 이동 방지
+
+        const selectedDist = $(this).text().trim();
+
+        // 1. 전역 변수 업데이트
+        currentDistrict = selectedDist;
+
+        // 2. 버튼 텍스트 변경 (현재 선택된 구 표시)
+        $('#districtSelect').text(selectedDist);
+
+        // 3. 화면 갱신 (차트, 지도 강조 등)
+        updateDisplay();
+
+        console.log(`자치구 선택 변경: ${selectedDist}`);
+    });
+
+    initializeDistrictMenu();
+    updateDisplay();
+    applySliderSettings(initialMode);
+    window.addEventListener('resize', () => mapChart.resize());
 });

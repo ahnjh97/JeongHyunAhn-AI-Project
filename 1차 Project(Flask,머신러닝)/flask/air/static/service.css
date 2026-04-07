@@ -102,19 +102,6 @@
     letter-spacing: -1px;
 }
 
-/* 카카오맵 레이블 */
-.map-label {
-    padding: 6px 14px;
-    border-radius: 20px;
-    color: white;
-    font-weight: 700;
-    font-size: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    backdrop-filter: blur(5px);
-}
-
-/* 고위험군 행동 수칙 카드 내부 스타일 */
 .rule-card {
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
     backdrop-filter: blur(10px);
@@ -171,7 +158,6 @@
     .side-chart { height: 200px; }
 }
 
-/* 카카오맵 높이 조절 */
 .custom-map-height {
     height: 450px;
 }
@@ -180,4 +166,10 @@
     .custom-map-height {
         height: 320px;
     }
+}
+
+/* 차트 컨테이너 자체의 여백 제거 */
+#forecastChart {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }
