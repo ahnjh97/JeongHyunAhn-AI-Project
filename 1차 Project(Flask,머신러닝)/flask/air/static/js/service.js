@@ -191,8 +191,34 @@ $(document).ready(function() {
         for(let i=0; i<7; i++) {
             const d = getMergedData(diseaseKey, i, currentDistrict);
             const val = d ? d.pred_cnt : 0;
+            const rate = d ? d.pred_rate : 0;
             chartValues.push(val);
-            if (i >= 3) $(`.summary-val:eq(${i-2})`).text(`${val}명`);
+
+            // 상단 카드 갱신 (오늘~3일후: 인덱스 3, 4, 5, 6)
+            if (i >= 3) {
+                const $cardVal = $(`.summary-val:eq(${i-2})`); // 카드 엘리먼트 선택
+                $cardVal.text(`${val}명`);
+
+                // --- [추가] 위험도 기반 색상 변경 로직 ---
+                const riskRatio = (rate / seoulAvg) * 100;
+                $cardVal.removeClass('status-safe status-normal status-caution status-danger');
+
+                if (riskRatio >= 150) {
+                    $cardVal.addClass('status-danger');   // 매우 위험
+                } else if (riskRatio >= 110) {
+                    $cardVal.addClass('status-caution');  // 주의
+                } else if (riskRatio >= 80) {
+                    $cardVal.addClass('status-normal');   // 보통
+                } else {
+                    $cardVal.addClass('status-safe');     // 안전
+                }
+                // ---------------------------------------
+            }
+
+            // 첫 번째 카드는 미세먼지 수치(x값)이므로 별도 처리
+            if (i === 3) {
+                 $(`.summary-val:eq(0)`).text($('#pm10').val());
+            }
         }
 
         // Chart.js 갱신
@@ -219,15 +245,37 @@ $(document).ready(function() {
         const selectedInfo = getMergedData(diseaseKey, currentDateIndex, currentDistrict);
         if (selectedInfo) {
             const riskRatio = (selectedInfo.pred_rate / seoulAvg) * 100;
-            const level = riskRatio > 120 ? '위험' : riskRatio > 90 ? '보통' : '안전';
-            const colorClass = riskRatio > 120 ? 'text-danger' : riskRatio > 90 ? 'text-warning' : 'text-success';
-            const barClass = riskRatio > 120 ? 'bg-danger' : riskRatio > 90 ? 'bg-warning' : 'bg-success';
+
+            // 1. 상단 카드와 100% 동일한 기준 적용
+            let level = '';
+            let colorClass = '';
+            let barClass = '';
+
+            if (riskRatio >= 150) {
+                level = '위험';
+                colorClass = 'status-danger';
+                barClass = 'bar-danger';
+            } else if (riskRatio >= 110) {
+                level = '주의';
+                colorClass = 'status-caution';
+                barClass = 'bar-caution'; // 주황색 느낌을 위해 warning 유지
+            } else if (riskRatio >= 80) {
+                level = '보통';
+                colorClass = 'status-normal';
+                barClass = 'bar-normal';    // 보통 단계는 하늘색/파란색 계열 바
+            } else {
+                level = '안전';
+                colorClass = 'status-safe';
+                barClass = 'bar-safe';
+            }
 
             $('#risk-progress-section').html(`
                 <div class="mb-4">
                     <div class="d-flex justify-content-between small mb-2">
-                        <span class="fw-bold">${currentDistrict}</span>
-                        <span class="${colorClass} fw-bold">${level} (${riskRatio.toFixed(0)}%)</span>
+                        <span class="fw-bold" style="color: #334155;">${currentDistrict}</span>
+                        <span class="${colorClass} fw-bolder">
+                            ${level} (${riskRatio.toFixed(0)}%)
+                        </span>
                     </div>
                     <div class="progress" style="height: 10px;">
                         <div class="progress-bar ${barClass}" style="width: ${Math.min(riskRatio, 100)}%"></div>

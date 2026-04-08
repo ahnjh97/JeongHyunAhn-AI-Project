@@ -173,3 +173,40 @@
     margin-top: 0 !important;
     padding-top: 0 !important;
 }
+
+/* 슬라이더와 입력칸 공통 적용 */
+.form-range,
+#predictionForm .form-control-sm {
+    max-width: 120px; /* 입력칸은 숫자가 짧으므로 슬라이더보다 조금 더 작게 잡는 게 예쁩니다 */
+    margin: 0 auto;
+    display: block;
+}
+
+/* 슬라이더는 입력칸보다는 조금 더 길어도 괜찮으니 별도로 살짝 조정 */
+.form-range {
+    max-width: 180px;
+}
+
+/* 상단 요약 카드 색상 변화를 위한 기본 클래스 */
+.summary-val {
+    font-weight: 800;
+    font-size: 1.6rem;
+    transition: color 0.3s ease;
+}
+
+/* 글자색 (상단 카드 & 라벨용) */
+.status-safe { color: #198754 !important; }      /* 초록 */
+.status-normal { color: #ffc107 !important; }    /* 진한 노랑 (가독성) */
+.status-caution { color: #fd7e14 !important; }   /* 주황 */
+.status-danger { color: #dc3545 !important; }    /* 빨강 */
+
+/* 막대기 색상 (우측 하단 바용) */
+.bar-safe { background-color: #198754 !important; }
+.bar-normal { background-color: #ffc107 !important; } /* 노랑 */
+.bar-caution { background-color: #fd7e14 !important; }
+.bar-danger { background-color: #dc3545 !important; }
+
+/* 반응형 대응: 모바일에서 폰트 크기 조정 */
+@media (max-width: 991px) {
+    .summary-val { font-size: 1.4rem; }
+}

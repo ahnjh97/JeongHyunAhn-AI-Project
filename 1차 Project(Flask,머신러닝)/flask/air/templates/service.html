@@ -6,17 +6,17 @@
         <div class="row g-3">
             <div class="col-12 col-lg-3 order-2 order-lg-1">
                 <div class="card p-3 shadow-sm border-0 mb-2">
-                    <h6 class="card-title fw-bold mb-2 text-center fs-5">⚙️ 시뮬레이션 변수</h6>
+                    <h6 class="card-title fw-bold mb-2 text-center fs-5">⚙️ Feature 조정 </h6>
                     <form id="predictionForm" class="text-center">
                         {{ form.csrf_token }}
                         <div class="row g-2 mb-3">
                             <div class="col-6">
-                                <label class="form-label small fw-bold mb-0" for="pm10">미세먼지(3일평균)</label>
+                                <label class="form-label small fw-bold mb-0" for="pm10">미세먼지(과거 3일평균)</label>
                                 <input type="range" class="form-range" id="pm10_range" min="0" max="300" value="75">
                                 <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="pm10" name="pm10_3avg" value="75">
                             </div>
                             <div class="col-6">
-                                <label class="form-label small fw-bold mb-0" for="pm25">초미세먼지(3일평균)</label>
+                                <label class="form-label small fw-bold mb-0" for="pm25">초미세먼지(과거 3일평균)</label>
                                 <input type="range" class="form-range" id="pm25_range" min="0" max="150" value="35">
                                 <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="pm25" name="pm25_3avg" value="35">
                             </div>
@@ -67,7 +67,7 @@
 
                         <div class="row g-3 mb-3">
                             <div class="col-6">
-                                <label class="small fw-bold mb-0" for="grdp_pc">1인당 지역내총생산</label>
+                                <label class="small fw-bold mb-0" for="grdp_pc">1인당 지역내총생산(천원)</label>
                                 <input type="range" class="form-range" id="grdp_range" min="0" max="600000" value="50000">
                                 <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 80%;" id="grdp_pc" name="grdp_pc" value="50000">
                             </div>

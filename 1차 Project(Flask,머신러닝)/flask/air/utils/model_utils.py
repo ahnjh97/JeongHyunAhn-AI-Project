@@ -281,7 +281,7 @@ def run_main_model_once(dist_name, disease_type, simulation_vars):
         row[f'AFTER_HOLIDAY_D{i}'] = 1 if (
                     yesterday_of_target in kr_holidays or yesterday_of_target.weekday() == 6) else 0
 
-    print(row)
+    # print(row)
 
     # 5. 데이터프레임 변환 및 타입 최적화 (학습 시와 동일하게)
     df_live = pd.DataFrame([row]).reindex(columns=feature_columns)
