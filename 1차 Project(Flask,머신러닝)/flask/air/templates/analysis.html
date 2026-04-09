@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include "navbar.html" %}
+<div class="container-fluid py-4">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="glass-card p-4 mb-2">
+                <h3 class="fw-bold" style="color: #334155;">AI 모델 변수 중요도 분석</h3>
+                <p class="text-secondary mb-0">AIR 서비스가 질병 위험도를 예측할 때 어떤 환경 요소(미세먼지, 기온 등)를 가장 비중 있게 고려했는지 보여줍니다.</p>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Feature Importance (Top 10)</h5>
+                    <span class="badge rounded-pill bg-primary px-3">XGBoost Model</span>
+                </div>
+                <div style="position: relative; height: 400px;">
+                    <canvas id="importanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-card p-4 h-100">
+                <h5 class="fw-bold mb-3">데이터 해석 가이드</h5>
+                <div id="importance-guide-list">
+                    <div class="p-3 mb-3 border-start border-4 border-primary" style="background: rgba(255,255,255,0.3); border-radius: 4px;">
+                        <small class="text-muted d-block">가장 영향력 있는 변수</small>
+                        <strong id="top-feature-name" style="color: #334155;">분석 중...</strong>
+                    </div>
+                    <p class="small text-secondary">
+                        중요도가 높은 변수일수록 모델이 질병 환자 수의 증감을 판단하는 데 결정적인 역할을 수행합니다.
+                        환경 수치 변화에 따른 예측 민감도를 확인하세요.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}
