@@ -279,3 +279,32 @@ body {
     transition: transform 0.3s;
 }
 #backToTop:hover { transform: translateY(-5px); }
+
+/* .btn-primary를 이기기 위해 클래스를 겹쳐서 작성하거나 !important를 사용합니다 */
+.nav-item .btn-payment {
+    background-color: #7d2ae8 !important; /* 선명한 AI 느낌의 보라색 */
+    border-color: #7d2ae8 !important;
+    color: white !important;
+
+    /* 로그인 버튼과의 간격을 위한 오른쪽 여백 */
+    margin-right: 1.2rem !important;
+
+    /* 부드러운 호버 효과 */
+    transition: all 0.2s ease-in-out;
+    border-radius: 8px; /* 살짝 둥글게 */
+}
+
+/* 마우스를 올렸을 때: 더 밝고 화사한 보라색으로 변경 */
+.nav-item .btn-payment:hover {
+    /* 기존보다 밝은 네온 퍼플 느낌 */
+    background-color: #9d50ff !important;
+    border-color: #9d50ff !important;
+    color: white !important;
+
+    /* 하늘색 버튼 예시와 같은 스타일의 그림자 효과 */
+    box-shadow: 0 4px 15px rgba(157, 80, 255, 0.5);
+
+    /* 텍스트 데코레이션 제거 및 살짝 위로 뜨는 느낌 */
+    text-decoration: none !important;
+    transform: translateY(-1px);
+}

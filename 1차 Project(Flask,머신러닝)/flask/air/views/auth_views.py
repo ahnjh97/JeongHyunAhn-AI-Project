@@ -215,3 +215,7 @@ def check_username():
             'is_available': True,
             'message': '사용 가능한 아이디입니다.'
         })
+
+@bp.route('/payment', methods=['GET', 'POST'])
+def payment():
+    return render_template('auth/payment.html')
