@@ -28,19 +28,22 @@
 
         <div class="collapse navbar-collapse d-none d-lg-block">
             <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item">
+                    <a class="btn btn-lg fs-5 text-white fw-bold px-4 btn-PreDect me-3" href="{{ url_for('PreDect.PreDect') }}">Vision</a>
+                </li>
                 {% if request.path != '/' %}
                     <li class="nav-item">
-                        <a class="btn text-white fw-bold px-3 btn-payment" href="{{ url_for('auth.payment') }}">플랜 선택</a>
+                        <a class="btn text-white fw-bold px-3 btn-primary" href="{{ url_for('auth.payment') }}">플랜 선택</a>
                     </li>
 
-                    {% if g.user %}
-                        <li class="nav-item"><a class="nav-link nav-custom-link" href="{{ url_for('auth.logout') }}">로그아웃</a></li>
-                    {% else %}
-                        <li class="nav-item ms-lg-4"><a class="nav-link nav-custom-link" href="{{ url_for('auth.login') }}">로그인</a></li>
-                        <li class="nav-item ms-lg-2">
-                            <a class="btn btn-primary text-white fw-bold px-3" href="{{ url_for('auth.signup') }}">회원 가입</a>
-                        </li>
-                    {% endif %}
+<!--                    {% if g.user %}-->
+<!--                        <li class="nav-item"><a class="nav-link nav-custom-link" href="{{ url_for('auth.logout') }}">로그아웃</a></li>-->
+<!--                    {% else %}-->
+<!--                        <li class="nav-item ms-lg-4"><a class="nav-link nav-custom-link" href="{{ url_for('auth.login') }}">로그인</a></li>-->
+<!--                        <li class="nav-item ms-lg-2">-->
+<!--                            <a class="btn btn-primary text-white fw-bold px-3" href="{{ url_for('auth.signup') }}">회원 가입</a>-->
+<!--                        </li>-->
+<!--                    {% endif %}-->
                 {% endif %}
             </ul>
         </div>
@@ -56,13 +59,17 @@
         <ul class="nav flex-column gap-3">
             <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/service">Service</a></li>
-            <hr>
-            {% if g.user %}
-                <li class="nav-item"><a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">로그아웃</a></li>
-            {% else %}
-                <li class="nav-item"><a class="nav-link text-primary" href="{{ url_for('auth.login') }}">로그인</a></li>
-                <li class="nav-item"><a class="btn btn-primary w-100" href="{{ url_for('auth.signup') }}">회원 가입</a></li>
+            <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/PreDect">Vision</a></li>
+            {% if request.path != '/' %}
+            <li class="nav-item"><a class="nav-link text-dark fw-bold" href="auth/payment">Payment</a></li>
             {% endif %}
+<!--            <hr>-->
+<!--            {% if g.user %}-->
+<!--                <li class="nav-item"><a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">로그아웃</a></li>-->
+<!--            {% else %}-->
+<!--&lt;!&ndash;                <li class="nav-item"><a class="nav-link text-primary" href="{{ url_for('auth.login') }}">로그인</a></li>&ndash;&gt;-->
+<!--&lt;!&ndash;                <li class="nav-item"><a class="btn btn-primary w-100" href="{{ url_for('auth.signup') }}">회원 가입</a></li>&ndash;&gt;-->
+<!--            {% endif %}-->
         </ul>
     </div>
 </div>

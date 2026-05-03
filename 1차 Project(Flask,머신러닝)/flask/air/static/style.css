@@ -281,7 +281,7 @@ body {
 #backToTop:hover { transform: translateY(-5px); }
 
 /* .btn-primary를 이기기 위해 클래스를 겹쳐서 작성하거나 !important를 사용합니다 */
-.nav-item .btn-payment {
+.nav-item .btn-PreDect {
     background-color: #7d2ae8 !important; /* 선명한 AI 느낌의 보라색 */
     border-color: #7d2ae8 !important;
     color: white !important;
@@ -295,7 +295,7 @@ body {
 }
 
 /* 마우스를 올렸을 때: 더 밝고 화사한 보라색으로 변경 */
-.nav-item .btn-payment:hover {
+.nav-item .btn-PreDect:hover {
     /* 기존보다 밝은 네온 퍼플 느낌 */
     background-color: #9d50ff !important;
     border-color: #9d50ff !important;

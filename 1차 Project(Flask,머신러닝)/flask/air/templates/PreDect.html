@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}이미지 탐지 기반 위험도{% endblock %}
+{% block content %}
+<!-- 전체 배경에 어두운 톤이나 이미지가 깔려있으면 블러 효과가 더 극대화됩니다 -->
+<div class="container mt-5 d-flex justify-content-center">
+
+    <!-- 주신 스타일을 적용한 메인 글래스 컨테이너 -->
+    <div class="custom-glass-container">
+
+        <!-- 1. 제목 영역 -->
+        <h3 class="system-title text-center mb-4">이미지 탐지 기반 위험도 시스템</h3>
+
+        <!-- 2. 영상 영역 -->
+        <div class="video-section text-center mb-4">
+            <img src="http://127.0.0.1:8888/video_feed"
+                 alt="YOLOv11 Stream"
+                 class="main-video-stream shadow">
+        </div>
+
+        <!-- 3. 하단 위험도 분석 영역 -->
+        <div id="risk-card" class="risk-info-bar">
+            <div class="d-flex align-items-center justify-content-between px-4 py-2">
+
+                <!-- 위험도 수치 -->
+                <div class="d-flex align-items-baseline">
+                    <span class="text-muted fw-bold me-2">위험도:</span>
+                    <h2 class="mb-0 fw-bold" id="risk-prob-text"><span id="risk-prob">0</span>%</h2>
+                </div>
+
+                <div class="vr mx-3" style="width: 2px; opacity: 0.3;"></div>
+
+                <!-- 탐지 객체 -->
+                <div class="text-start flex-grow-1 overflow-hidden" style="white-space: nowrap; text-overflow: ellipsis;">
+                    <span class="text-muted fw-bold">탐지 객체:</span>
+                    <span id="detected-objs" class="ms-2 fw-semibold text-dark">대기 중...</span>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    function updateRiskData() {
+        fetch('http://127.0.0.1:8888/get_risk')
+            .then(response => response.json())
+            .then(data => {
+                const prob = Math.round(data.probability * 100);
+                const probElement = document.getElementById('risk-prob');
+                const textElement = document.getElementById('risk-prob-text');
+                const cardElement = document.getElementById('risk-card');
+                const objElement = document.getElementById('detected-objs');
+
+                probElement.innerText = prob;
+
+                // 위험도에 따라 하단 바의 테두리와 글자 색상 변경 (글래스 느낌 유지)
+                if (prob >= 70) {
+                    cardElement.className = 'risk-info-bar danger-glass';
+                    textElement.className = 'mb-0 fw-bold text-danger';
+                } else if (prob >= 40) {
+                    cardElement.className = 'risk-info-bar warning-glass';
+                    textElement.className = 'mb-0 fw-bold text-warning';
+                } else {
+                    cardElement.className = 'risk-info-bar primary-glass';
+                    textElement.className = 'mb-0 fw-bold text-primary';
+                }
+
+                objElement.innerText = data.detected_objects.length > 0 ? data.detected_objects.join(', ') : '없음';
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    setInterval(updateRiskData, 500);
+</script>
+
+<style>
+    .custom-glass-container {
+        position: relative;
+        left: auto;
+        transform: none;
+        top: auto;
+        width: 100%;
+        max-width: 800px; /* 영상 출력을 위해 450px -> 800px로 확장 */
+        margin-top: 10px;
+        margin-bottom: 15px;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+    }
+
+    /* 제목 스타일링 */
+    .system-title {
+        font-weight: 800;
+        color: #2c3e50; /* 텍스트가 잘 보이도록 진한 색 */
+        text-shadow: 1px 1px 5px rgba(255, 255, 255, 0.6); /* 유리 배경에서 글씨가 돋보이게 */
+    }
+
+    /* 2. 영상 스트리밍 이미지 스타일 */
+    .main-video-stream {
+        width: 100%;
+        max-height: 500px;
+        object-fit: contain;
+        border-radius: 16px; /* 메인 컨테이너에 맞춰 둥글게 */
+        background-color: rgba(0, 0, 0, 0.5); /* 영상 로딩 전 어두운 배경 */
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* 3. 하단 위험도 분석 바 (미니 글래스 효과) */
+    .risk-info-bar {
+        background: rgba(255, 255, 255, 0.4); /* 메인 컨테이너보다 살짝 불투명하게 */
+        border-radius: 16px;
+        border: 4px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    /* 동적 상태 변경용 클래스 (색상 및 굵은 테두리) */
+    .primary-glass {
+        border-color: rgba(13, 110, 253, 0.6); /* 파란색 */
+    }
+    .warning-glass {
+        border-color: rgba(255, 193, 7, 0.8); /* 노란색 */
+        background: rgba(255, 193, 7, 0.1);
+    }
+    .danger-glass {
+        border-color: rgba(220, 53, 69, 0.9); /* 빨간색 */
+        background: rgba(220, 53, 69, 0.1);
+        box-shadow: 0 0 15px rgba(220, 53, 69, 0.3);
+    }
+</style>
+{% endblock %}
