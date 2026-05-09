@@ -12,7 +12,7 @@
 
         <!-- 2. 영상 영역 -->
         <div class="video-section text-center mb-4">
-            <img src="http://127.0.0.1:8888/video_feed"
+            <img src="http://127.0.0.1:8888/detection/video-feed"
                  alt="YOLOv11 Stream"
                  class="main-video-stream shadow">
         </div>
@@ -45,7 +45,7 @@
 {% block script %}
 <script>
     function updateRiskData() {
-        fetch('http://127.0.0.1:8888/get_risk')
+        fetch('http://127.0.0.1:8888/detection/risk-data')
             .then(response => response.json())
             .then(data => {
                 const prob = Math.round(data.probability * 100);
