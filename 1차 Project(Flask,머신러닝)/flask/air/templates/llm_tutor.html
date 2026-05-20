@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Unity LLM Tutor{% endblock %}
+
+{% block content %}
+<main class="llm-page no-select">
+    <section class="llm-shell">
+        <div class="llm-header">
+            <span class="llm-kicker">Domain-Specific LLM</span>
+            <h1>Unity/GameDev 튜터</h1>
+            <p>
+                Unity, 게임 개발, 게임 수학 질문을 입력하면 AWS Flask-RESTX API와 MCP Tool Layer를 거쳐
+                파인튜닝된 LLM 응답을 반환합니다.
+            </p>
+        </div>
+
+        <div class="llm-layout">
+            <section class="llm-chat-panel" aria-label="LLM tutor chat">
+                <div id="chatMessages" class="llm-messages">
+                    <div class="llm-message assistant">
+                        <div class="message-role">Tutor</div>
+                        <div class="message-bubble">Unity의 컴포넌트, 물리, C# 스크립팅, 게임 수학에 대해 질문해보세요.</div>
+                    </div>
+                </div>
+
+                <form id="llmChatForm" class="llm-input-row">
+                    <textarea
+                        id="questionInput"
+                        rows="3"
+                        placeholder="예: Unity에서 Rigidbody와 CharacterController의 차이를 설명해줘."
+                        required></textarea>
+                    <button type="submit" id="sendButton" class="btn-send">
+                        <i class="bi bi-send-fill"></i>
+                        <span>전송</span>
+                    </button>
+                </form>
+            </section>
+
+            <aside class="llm-side-panel">
+                <h2>API Flow</h2>
+                <ol class="flow-list">
+                    <li>1차 HTML Prompt 화면</li>
+                    <li>AWS Flask-RESTX <code>POST /chat</code></li>
+                    <li>MCP Client → MCP Server Tool</li>
+                    <li>Cloudflare Tunnel → vLLM 추론 서버</li>
+                    <li>JSON 응답 반환</li>
+                </ol>
+
+                <div class="sample-box">
+                    <h3>추천 질문</h3>
+                    <button type="button" class="sample-question">오브젝트 풀링은 언제 써야 해?</button>
+                    <button type="button" class="sample-question">FixedUpdate와 Update 차이를 설명해줘.</button>
+                    <button type="button" class="sample-question">점프 속도 계산식을 게임 수학 관점에서 알려줘.</button>
+                </div>
+            </aside>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    const LLM_API_URL = "{{ llm_api_url }}";
+    const chatForm = document.getElementById("llmChatForm");
+    const questionInput = document.getElementById("questionInput");
+    const chatMessages = document.getElementById("chatMessages");
+    const sendButton = document.getElementById("sendButton");
+
+    function appendMessage(role, text) {
+        const wrapper = document.createElement("div");
+        wrapper.className = `llm-message ${role}`;
+
+        const roleEl = document.createElement("div");
+        roleEl.className = "message-role";
+        roleEl.textContent = role === "user" ? "You" : "Tutor";
+
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble";
+        bubble.textContent = text;
+
+        wrapper.appendChild(roleEl);
+        wrapper.appendChild(bubble);
+        chatMessages.appendChild(wrapper);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        return wrapper;
+    }
+
+    async function requestTutorAnswer(question) {
+        const response = await fetch(LLM_API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ question }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.answer || data.message || "LLM API 요청에 실패했습니다.");
+        }
+
+        return data.answer || "응답이 비어 있습니다.";
+    }
+
+    chatForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const question = questionInput.value.trim();
+        if (!question) return;
+
+        appendMessage("user", question);
+        questionInput.value = "";
+        questionInput.focus();
+
+        sendButton.disabled = true;
+        const pending = appendMessage("assistant", "답변을 생성하는 중입니다...");
+
+        try {
+            const answer = await requestTutorAnswer(question);
+            pending.querySelector(".message-bubble").textContent = answer;
+        } catch (error) {
+            pending.querySelector(".message-bubble").textContent = error.message;
+            pending.classList.add("error");
+        } finally {
+            sendButton.disabled = false;
+        }
+    });
+
+    document.querySelectorAll(".sample-question").forEach((button) => {
+        button.addEventListener("click", () => {
+            questionInput.value = button.textContent;
+            questionInput.focus();
+        });
+    });
+</script>
+{% endblock %}

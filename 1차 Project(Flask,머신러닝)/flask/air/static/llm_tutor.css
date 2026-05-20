@@ -1,0 +1,311 @@
+.llm-page {
+    box-sizing: border-box;
+    height: 100vh;
+    padding: 24px 24px 22px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+.llm-shell {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.llm-header {
+    margin-bottom: 14px;
+}
+
+.llm-kicker {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #2563eb;
+    text-transform: uppercase;
+}
+
+.llm-header h1 {
+    margin: 0 0 6px;
+    color: #111827;
+    font-size: 1.9rem;
+    font-weight: 900;
+}
+
+.llm-header p {
+    max-width: none;
+    margin: 0;
+    color: #475569;
+    font-size: 0.96rem;
+    line-height: 1.55;
+    white-space: nowrap;
+}
+
+.llm-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 20px;
+    align-items: stretch;
+    height: min(498px, calc(100vh - 190px));
+    min-height: 380px;
+}
+
+.llm-chat-panel,
+.llm-side-panel {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
+}
+
+.llm-chat-panel {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    overflow: hidden;
+}
+
+.llm-messages {
+    padding: 16px 18px;
+    overflow-y: auto;
+}
+
+.llm-message {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.llm-message.compact {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 7px;
+    margin-bottom: 6px;
+}
+
+.llm-message.user .message-bubble {
+    justify-self: end;
+    max-width: min(100%, 640px);
+    background: rgba(219, 234, 254, 0.52);
+    border-color: rgba(37, 99, 235, 0.32);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.llm-message.error .message-bubble {
+    background: rgba(254, 242, 242, 0.5);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #991b1b;
+}
+
+.message-role {
+    padding-top: 7px;
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.llm-message.user {
+    grid-template-columns: minmax(0, 1fr) 52px;
+}
+
+.llm-message.user .message-role {
+    grid-column: 2;
+    grid-row: 1;
+    color: #2563eb;
+    text-align: right;
+}
+
+.llm-message.user .message-bubble {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.llm-message.compact .message-role {
+    padding-top: 3px;
+    font-size: 0.74rem;
+}
+
+.message-bubble {
+    white-space: pre-wrap;
+    line-height: 1.55;
+    color: #1f2937;
+    background: rgba(255, 255, 255, 0.52);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.48);
+    border-radius: 16px;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
+    padding: 9px 12px;
+}
+
+.llm-message.compact .message-bubble {
+    padding: 4px 9px;
+    line-height: 1.25;
+}
+
+.llm-input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 112px;
+    gap: 12px;
+    padding: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.llm-input-row textarea {
+    resize: vertical;
+    min-height: 58px;
+    max-height: 96px;
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    border-radius: 16px;
+    padding: 12px 14px;
+    outline: none;
+    line-height: 1.5;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #1f2937;
+}
+
+.llm-input-row textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.btn-send {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 16px;
+    background: rgba(37, 99, 235, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+    color: white;
+    font-weight: 800;
+}
+
+.btn-send:disabled {
+    opacity: 0.65;
+}
+
+.llm-side-panel {
+    height: 100%;
+    padding: 20px;
+}
+
+.llm-side-panel h2,
+.sample-box h3 {
+    color: #111827;
+    font-size: 1.05rem;
+    font-weight: 900;
+}
+
+.flow-list {
+    margin: 12px 0 18px;
+    padding-left: 20px;
+    color: #334155;
+    line-height: 1.8;
+}
+
+.flow-list code {
+    color: #1d4ed8;
+    font-weight: 800;
+}
+
+.sample-box {
+    border-top: 1px solid rgba(255, 255, 255, 0.28);
+    padding-top: 16px;
+}
+
+.sample-question {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #334155;
+    text-align: left;
+    font-weight: 700;
+}
+
+.sample-question:hover {
+    border-color: #2563eb;
+    color: #1d4ed8;
+}
+
+@media (max-width: 991px) {
+    .llm-page {
+        height: auto;
+        min-height: 100vh;
+        padding: 24px 14px 28px;
+        overflow: visible;
+        align-items: flex-start;
+    }
+
+    .llm-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: 0;
+    }
+
+    .llm-header p {
+        white-space: normal;
+    }
+
+    .llm-chat-panel {
+        height: auto;
+        min-height: 420px;
+    }
+
+    .message-bubble {
+        background: rgba(255, 255, 255, 0.62);
+        border-color: rgba(148, 163, 184, 0.38);
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .llm-message.user .message-bubble {
+        background: rgba(219, 234, 254, 0.68);
+        border-color: rgba(37, 99, 235, 0.36);
+    }
+
+    .llm-message.error .message-bubble {
+        background: rgba(254, 242, 242, 0.74);
+        border-color: rgba(220, 53, 69, 0.34);
+    }
+
+    .llm-input-row {
+        grid-template-columns: 1fr;
+    }
+
+    .btn-send {
+        min-height: 48px;
+    }
+
+    .llm-message {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .llm-message.user {
+        grid-template-columns: 1fr;
+    }
+
+    .llm-message.user .message-role,
+    .llm-message.user .message-bubble {
+        grid-column: 1;
+    }
+
+    .message-role {
+        padding-top: 0;
+    }
+}

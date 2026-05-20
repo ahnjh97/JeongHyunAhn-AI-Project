@@ -308,3 +308,21 @@ body {
     text-decoration: none !important;
     transform: translateY(-1px);
 }
+
+.nav-item .btn-llm-tutor {
+    background-color: #10b981 !important;
+    border-color: #10b981 !important;
+    color: white !important;
+    margin-right: 1.2rem !important;
+    transition: all 0.2s ease-in-out;
+    border-radius: 8px;
+}
+
+.nav-item .btn-llm-tutor:hover {
+    background-color: #34d399 !important;
+    border-color: #34d399 !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.42);
+    text-decoration: none !important;
+    transform: translateY(-1px);
+}
