@@ -1,20 +1,25 @@
-.llm-page {
+﻿.llm-page {
     box-sizing: border-box;
+    min-height: 100vh;
     height: 100vh;
     padding: 24px 24px 22px;
     overflow: hidden;
     display: flex;
-    align-items: center;
+    align-items: stretch;
 }
 
 .llm-shell {
     width: 100%;
     max-width: 1180px;
     margin: 0 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
 }
 
 .llm-header {
     margin-bottom: 14px;
+    flex: 0 0 auto;
 }
 
 .llm-kicker {
@@ -48,8 +53,8 @@
     grid-template-columns: minmax(0, 1fr) 320px;
     gap: 20px;
     align-items: stretch;
-    height: min(498px, calc(100vh - 190px));
-    min-height: 380px;
+    height: 100%;
+    min-height: 0;
 }
 
 .llm-chat-panel,
@@ -197,7 +202,9 @@
 
 .llm-side-panel {
     height: 100%;
+    min-height: 0;
     padding: 20px;
+    overflow-y: auto;
 }
 
 .llm-side-panel h2,
@@ -249,7 +256,11 @@
         min-height: 100vh;
         padding: 24px 14px 28px;
         overflow: visible;
-        align-items: flex-start;
+        align-items: stretch;
+    }
+
+    .llm-shell {
+        display: block;
     }
 
     .llm-layout {
@@ -309,3 +320,4 @@
         padding-top: 0;
     }
 }
+
