@@ -134,6 +134,11 @@ def main():
         df = pd.read_sql("SELECT * FROM TRAIN_SET ORDER BY measure_date, dist_code", conn)
         conn.close()
 
+        df['MEASURE_DATE'] = pd.to_datetime(df['MEASURE_DATE'])
+
+        # 2020년 이전 데이터만 사용
+        df = df[df['MEASURE_DATE'] < '2020-01-01']
+
         # 결측치 제거
         df_clean = df.dropna()
         if len(df_clean) == 0:
